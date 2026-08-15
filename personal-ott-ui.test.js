@@ -8,10 +8,11 @@ const html=fs.readFileSync('index.html','utf8');
 const bootstrap=fs.readFileSync('bootstrap.js','utf8');
 
 test('personal OTT visual layer is mounted after legacy styles',()=>{
-  assert.match(html,/personal-ott\.css\?v=layout-repair-78/);
+  assert.match(html,/reference-ott\.css\?v=mobile-ott-79/);
   assert.ok(html.indexOf('personal-ott.css')>html.indexOf('ott-ui.css'));
-  assert.match(html,/bootstrap\.js\?v=layout-repair-78/);
-  assert.match(bootstrap,/app\.js\?v=layout-repair-78/);
+  assert.ok(html.indexOf('reference-ott.css')>html.indexOf('personal-ott.css'));
+  assert.match(html,/bootstrap\.js\?v=mobile-ott-79/);
+  assert.match(bootstrap,/app\.js\?v=mobile-ott-79/);
 });
 
 test('home and visitor experiences lead with full visual movie heroes',()=>{
