@@ -7,7 +7,7 @@ if(recoveredPath&&location.pathname==='/'){
 window.__REELATION_AUTH_USER_ID__=null;
 document.documentElement.dataset.auth='anonymous';
 
-import('./app.js?v=final-ia-75').then(async()=>{
+import('./app.js?v=final-ia-76').then(async()=>{
  try{
   const{getVerifiedUser,supabase}=await import('./supabase-client.js?v=magic-link-72');
   window.__REELATION_SUPABASE__=supabase;
