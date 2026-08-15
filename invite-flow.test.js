@@ -27,7 +27,7 @@ test('ordinary client inserts cannot forge INVITE cast members', () => {
 
 test('invite client resolves opaque tokens and submits through server functions', () => {
   assert.match(inviteClient, /functions\.invoke\('resolve-invite'/);
-  assert.match(inviteClient, /functions\.invoke\('submit-invite'/);
+  assert.match(inviteClient, /functions\.invoke\('submit-invite-auth'/);
   assert.match(inviteClient, /\^\\\/reel\\\/\(\[A-Za-z0-9_-\]\{40,128\}\)/);
 });
 
