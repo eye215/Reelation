@@ -8,6 +8,23 @@ const imageFor=person=>{
   return`/assets/pillars/${index}-${gender}.jpg`;
 };
 const readState=()=>{try{return JSON.parse(localStorage.getItem('reelation-state')||'null')}catch{return null}};
+const rankLabel=(rank,total)=>`${total}명 중 ${rank}위 <small>(상위 ${Math.ceil(rank/Math.max(total,1)*100)}%)</small>`;
+
+function enhanceRankLabels(){
+  const state=readState();
+  const total=state?.cast?.length||0;
+  if(!total)return;
+  document.querySelectorAll('.rank-num').forEach(el=>{if(!el.textContent.includes('위'))el.textContent=`${el.textContent.trim()}위`});
+  document.querySelectorAll('.visitor-cast-card>div>span,.visitor-rank-row>strong').forEach(el=>{const rank=Number(el.textContent.replace(/\D/g,''));if(rank)el.textContent=`${rank}위`});
+  document.querySelectorAll('.archive-card>div>span').forEach(el=>{const rank=Number(el.textContent.match(/#(\d+)/)?.[1]);if(rank)el.innerHTML=`${rankLabel(rank,total)} · 인생 영향도 ${el.textContent.match(/영향도\s+(\d+)/)?.[1]||''}`});
+  const heroRank=[...document.querySelectorAll('.detail-hero p')].find(el=>el.textContent.includes('인생 영향도'));
+  if(heroRank){const match=heroRank.textContent.match(/#(\d+)|·\s*(\d+)위?/),rank=Number(match?.[1]||match?.[2]);if(rank)heroRank.innerHTML=`인생 영향도 · ${rankLabel(rank,total)}`}
+  document.querySelectorAll('.film>span:last-child').forEach(el=>{
+    if(el.dataset.rankLabel)return;
+    const match=el.textContent.match(/(\d+)\s*\/\s*#?(\d+)/);if(!match)return;
+    el.dataset.rankLabel='true';el.innerHTML=`${match[1]}점 <em>${rankLabel(Number(match[2]),total)}</em>`;
+  });
+}
 
 function enhanceRouteSurface(){
   const route=location.pathname==='/cast'?'cast':location.pathname==='/ranking'?'ranking':location.pathname==='/settings'?'my':location.pathname.startsWith('/cast/')?'detail':location.pathname==='/board'?'board':'other';
@@ -47,11 +64,11 @@ function enhanceRelationshipStats(){
     const score=Math.round(Number(member.analysis?.scores?.[metric]||0));
     const ordered=[...state.cast].sort((a,b)=>Number(b.analysis?.scores?.[metric]||0)-Number(a.analysis?.scores?.[metric]||0)||String(a.id).localeCompare(String(b.id)));
     const rank=ordered.findIndex(person=>person.id===id)+1;
-    card.insertAdjacentHTML('beforeend',`<div class="stat-visual" aria-label="${score}점, 전체 ${total}명 중 ${rank}등"><div class="stat-track"><i style="width:${Math.max(0,Math.min(100,score))}%"></i></div><span>전체 ${total}명 중 <b>#${rank}</b></span></div>`);
+    card.insertAdjacentHTML('beforeend',`<div class="stat-visual" aria-label="${score}점, ${total}명 중 ${rank}위"><div class="stat-track"><i style="width:${Math.max(0,Math.min(100,score))}%"></i></div><span>${total}명 중 <b>${rank}위</b><small>(상위 ${Math.ceil(rank/Math.max(total,1)*100)}%)</small></span></div>`);
   });
 }
 
-const enhance=()=>{enhanceRouteSurface();enhanceRelationshipStats()};
+const enhance=()=>{enhanceRouteSurface();enhanceRelationshipStats();enhanceRankLabels()};
 const observer=new MutationObserver(enhance);
 observer.observe(document.querySelector('#app'),{childList:true,subtree:true});
 enhance();
