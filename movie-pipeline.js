@@ -1,4 +1,4 @@
-import {supabase,getVerifiedUser} from './supabase-client.js?v=auth-singleton-57';
+import {supabase,getVerifiedUser} from './supabase-client.js?v=auth-provider-69';
 
 const app=document.querySelector('#app');
 const statusCopy={DRAFT:'영화 제작 전',GENERATING:'포스터 제작 중',COMPLETED:'영화 공개 중',UPDATED:'새 출연진 반영됨',ARCHIVED:'보관됨'};
@@ -7,7 +7,12 @@ const showToast=message=>{const toast=document.querySelector('#toast');if(!toast
 async function getOwnerMovie(){
   const user=await getVerifiedUser();if(!user)return null;
   const{data}=await supabase.from('movies').select('id,board_id,status,current_version,title,primary_genre,character_type,tagline,generation_started_at,generation_completed_at').eq('owner_user_id',user.id).maybeSingle();
-  return data||null;
+  if(!data)return null;
+  const[{data:reel},{data:job}]=await Promise.all([
+    supabase.from('public_reels').select('public_id,poster_image_key').eq('board_id',data.board_id).maybeSingle(),
+    supabase.from('movie_generation_jobs').select('status,last_error,created_at').eq('movie_id',data.id).order('created_at',{ascending:false}).limit(1).maybeSingle()
+  ]);
+  return{...data,publicId:reel?.public_id||null,posterImageKey:reel?.poster_image_key||null,lastJob:job||null};
 }
 
 async function requestGeneration(movie,reason){
@@ -32,8 +37,16 @@ async function enhanceOwnerMovie(){
   if(location.pathname!=='/board'||document.querySelector('.movie-job-panel'))return;
   const hero=document.querySelector('.owner-movie-hero');if(!hero)return;
   const movie=await getOwnerMovie();if(!movie)return;
+  if(movie.posterImageKey){
+    const{data}=supabase.storage.from('movie-posters').getPublicUrl(movie.posterImageKey);
+    const art=hero.querySelector('.owner-character-still>.cast-art');
+    if(art&&data?.publicUrl){art.style.backgroundImage=`url('${data.publicUrl}')`;art.classList.add('generated-movie-poster');hero.classList.add('has-generated-poster')}
+  }
+  const failed=movie.lastJob?.status==='FAILED';
   const panel=document.createElement('section');panel.className=`movie-job-panel status-${movie.status.toLowerCase()}`;
-  panel.innerHTML=`<div><span class="movie-job-dot"></span><div><b>${statusCopy[movie.status]||movie.status}</b><small>${movie.status==='GENERATING'?'시나리오와 포스터를 만들고 있어요. 화면을 닫아도 계속 진행됩니다.':movie.status==='UPDATED'?'기존 영화는 유지돼요. 원할 때 새 버전을 만들 수 있어요.':`Movie v${movie.current_version||0}`}</small></div></div><div class="movie-job-actions">${movie.status!=='GENERATING'?`<button type="button" data-generate>${movie.current_version?'새로운 영화 만들기':'내 영화 제작하기'}</button>`:'<span>GENERATING…</span>'}<button type="button" data-share>공유</button></div>`;
+  if(failed)panel.classList.add('status-failed');
+  const detail=movie.status==='GENERATING'?'시나리오와 포스터를 만들고 있어요. 화면을 닫아도 계속 진행됩니다.':failed?'제작을 완료하지 못했어요. 기존 화면은 그대로 유지됩니다.':movie.status==='UPDATED'?'기존 영화는 유지돼요. 원할 때 새 버전을 만들 수 있어요.':movie.posterImageKey?`Movie v${movie.current_version} · 포스터 저장 완료`:`Movie v${movie.current_version||0}`;
+  panel.innerHTML=`<div><span class="movie-job-dot"></span><div><b>${failed?'포스터 제작 실패':statusCopy[movie.status]||movie.status}</b><small>${detail}</small></div></div><div class="movie-job-actions">${movie.status!=='GENERATING'?`<button type="button" data-generate>${failed?'다시 제작하기':movie.current_version?'새로운 영화 만들기':'내 영화 제작하기'}</button>`:'<span>GENERATING…</span>'}<button type="button" data-share>공유</button></div>`;
   hero.after(panel);
   panel.querySelector('[data-share]').onclick=shareReel;
   const generate=panel.querySelector('[data-generate]');
@@ -42,4 +55,3 @@ async function enhanceOwnerMovie(){
 }
 
 const observer=new MutationObserver(enhanceOwnerMovie);if(app)observer.observe(app,{childList:true,subtree:true});enhanceOwnerMovie();
-
