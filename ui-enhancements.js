@@ -16,8 +16,19 @@ const topic=name=>{const last=name.charCodeAt(name.length-1);return last>=0xac00
 const relationKeyword=person=>{const s=person.analysis.scores;return s.growth>=70?'성장':s.stability>=70?'편안함':s.conflict>=70?'긴장':s.impact>=75?'강한 영향':'호기심'};
 
 function enhanceNavigation(){
-  const labels=[['/board','BOARD'],['/cast','PEOPLE'],['/ranking','DISCOVER'],['/settings','MY']];
+  const labels=[['/board','BOARD'],['/cast','CAST'],['/ranking','RANKING'],['/settings','MY']];
   document.querySelectorAll('.bottomnav .navitem').forEach(button=>{const target=labels.find(([path])=>button.dataset.go===path);if(target){const icon=button.querySelector('i')?.outerHTML||'';button.innerHTML=`${icon}${target[1]}`}});
+}
+
+function enhanceMovieHome(){
+  if(location.pathname!=='/board'&&location.pathname!=='/')return;
+  const state=readState(),page=document.querySelector('.reel-page');
+  if(!state||!page||page.querySelector('.movie-home-feed'))return;
+  page.querySelectorAll('.relation-board-head,.relation-self,.relationship-overview,.relationship-clusters').forEach(el=>el.remove());
+  const ordered=[...state.cast].sort((a,b)=>Number(b.createdAt||0)-Number(a.createdAt||0));
+  const latest=ordered[0],chemistry=[...state.cast].sort((a,b)=>b.analysis.scores.overall-a.analysis.scores.overall)[0],twist=[...state.cast].sort((a,b)=>(b.analysis.scores.impact+b.analysis.scores.conflict)-(a.analysis.scores.impact+a.analysis.scores.conflict))[0];
+  const roleCounts=state.cast.reduce((all,person)=>{const role=ROLE_KO[person.analysis.lifeRole]||'관계 캐릭터';all[role]=(all[role]||0)+1;return all},{}),commonRole=Object.entries(roleCounts).sort((a,b)=>b[1]-a[1])[0];
+  page.insertAdjacentHTML('afterbegin',`<section class="movie-home-feed"><header class="movie-home-head"><div><span>MY MOVIE</span><h1>지금 내 영화</h1><p>현재 ${state.cast.length}명이 함께하고 있어요.</p></div><button data-go="/invite">친구 초대</button></header><article class="main-character-strip"><img src="${imageFor(state.owner)}" alt="${state.owner.nickname}"><div><span>MAIN CHARACTER</span><b>${state.owner.nickname}</b><small>내 이야기의 중심</small></div></article><div class="home-feed-grid">${latest?`<article class="feed-feature" onclick="location.href='/cast/${latest.id}'"><img src="${imageFor(latest)}" alt="${latest.nickname}"><div><span>NEW CAST</span><h2>${latest.nickname}</h2><b>${ROLE_KO[latest.analysis.lifeRole]||'새로운 인물'}</b><p>${relationKeyword(latest)}을 가져오는 새로운 캐릭터가 합류했어요.</p></div></article>`:''}<div class="feed-stack">${twist?`<article onclick="location.href='/cast/${twist.id}'"><span>PLOT TWIST</span><b>${state.owner.nickname} × ${twist.nickname}</b><p>예상보다 강한 긴장과 영향이 만들어지는 관계</p></article>`:''}${chemistry?`<article onclick="location.href='/cast/${chemistry.id}'"><span>THIS SEASON · BEST CHEMISTRY</span><b>${chemistry.nickname}</b><p>인생 영향도 ${Math.round(chemistry.analysis.scores.overall)}점</p></article>`:''}</div></div>${commonRole?`<article class="home-director-note"><span>DIRECTOR'S NOTE</span><b>요즘 내 영화에는 ‘${commonRole[0]}’ 역할이 가장 많이 보여요.</b><p>${commonRole[1]}명의 인물이 비슷한 방식으로 당신의 다음 장면에 영향을 주고 있습니다.</p></article>`:''}<button class="view-all-cast" onclick="location.href='/cast'">전체 캐스트 보기 <span>→</span></button></section>`);
 }
 
 function enhanceBoardMap(){
@@ -133,7 +144,7 @@ function enhanceRelationshipStats(){
   });
 }
 
-const enhance=()=>{enhanceRouteSurface();enhanceNavigation();enhanceBoardMap();enhanceRelationshipStats();enhanceRankLabels();enhanceScoreLabels();enhanceNarrative()};
+const enhance=()=>{enhanceRouteSurface();enhanceNavigation();enhanceBoardMap();enhanceMovieHome();enhanceRelationshipStats();enhanceRankLabels();enhanceScoreLabels();enhanceNarrative()};
 const observer=new MutationObserver(enhance);
 observer.observe(document.querySelector('#app'),{childList:true,subtree:true});
 enhance();
