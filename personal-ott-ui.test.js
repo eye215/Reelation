@@ -12,10 +12,10 @@ test('personal OTT visual layer is mounted after legacy styles',()=>{
   assert.match(html,/reference-ott\.css\?v=mobile-ott-79/);
   assert.ok(html.indexOf('personal-ott.css')>html.indexOf('ott-ui.css'));
   assert.ok(html.indexOf('reference-ott.css')>html.indexOf('personal-ott.css'));
-  assert.match(html,/reelation-v2\.css\?v=direct-entry-84/);
+  assert.match(html,/reelation-v2\.css\?v=poster-motion-85/);
   assert.ok(html.indexOf('reelation-v2.css')>html.indexOf('reference-ott.css'));
-  assert.match(html,/bootstrap\.js\?v=direct-entry-84/);
-  assert.match(bootstrap,/app\.js\?v=direct-entry-84/);
+  assert.match(html,/bootstrap\.js\?v=poster-motion-85/);
+  assert.match(bootstrap,/app\.js\?v=poster-motion-85/);
 });
 
 test('movie description opens from the poster as an immersive modal',()=>{
@@ -30,6 +30,14 @@ test('root entry collects birth data before guest or Kakao analysis',()=>{
   assert.match(app,/data-mode="kakao">카카오로 시작하기/);
   assert.doesNotMatch(app,/relation-home__preview/);
   assert.doesNotMatch(app,/relation-home__steps/);
+});
+
+test('poster lifts before the movie modal is revealed',()=>{
+  assert.match(app,/classList\.add\('is-lifting'\)/);
+  assert.match(app,/setTimeout\(resolve,260\)/);
+  assert.match(app,/modal\.showModal\(\)/);
+  assert.match(v2,/\.r9-poster\.is-lifting/);
+  assert.match(v2,/prefers-reduced-motion:reduce/);
 });
 
 test('home and visitor experiences lead with full visual movie heroes',()=>{
