@@ -12,10 +12,10 @@ test('personal OTT visual layer is mounted after legacy styles',()=>{
   assert.match(html,/reference-ott\.css\?v=mobile-ott-79/);
   assert.ok(html.indexOf('personal-ott.css')>html.indexOf('ott-ui.css'));
   assert.ok(html.indexOf('reference-ott.css')>html.indexOf('personal-ott.css'));
-  assert.match(html,/reelation-v2\.css\?v=poster-motion-85/);
+  assert.match(html,/reelation-v2\.css\?v=casting-board-87/);
   assert.ok(html.indexOf('reelation-v2.css')>html.indexOf('reference-ott.css'));
-  assert.match(html,/bootstrap\.js\?v=poster-motion-85/);
-  assert.match(bootstrap,/app\.js\?v=poster-motion-85/);
+  assert.match(html,/bootstrap\.js\?v=casting-board-87/);
+  assert.match(bootstrap,/app\.js\?v=casting-board-87/);
 });
 
 test('movie description opens from the poster as an immersive modal',()=>{
@@ -55,7 +55,8 @@ test('cast and filmography use mobile horizontal rails',()=>{
 
 test('rebuilt owner and cast detail are image-first mobile experiences',()=>{
   assert.match(app,/r9-poster/);
-  assert.match(app,/r9-cast-lane/);
+  assert.match(app,/r11-cast-board/);
+  assert.match(app,/data-cast-preview/);
   assert.match(app,/r9-detail-visual/);
   assert.match(app,/r9-film-rail/);
   assert.match(v2,/scroll-snap-type:x mandatory/);
