@@ -7,7 +7,7 @@ if(recoveredPath&&location.pathname==='/'){
 window.__REELATION_AUTH_USER_ID__=null;
 document.documentElement.dataset.auth='anonymous';
 
-import('./app.js?v=visitor-main-88').then(async()=>{
+import('./app.js?v=session-restore-89').then(async()=>{
  try{
   const{getVerifiedUser,supabase}=await import('./supabase-client.js?v=magic-link-72');
   window.__REELATION_SUPABASE__=supabase;
@@ -16,9 +16,15 @@ import('./app.js?v=visitor-main-88').then(async()=>{
   window.__REELATION_AUTH_USER_ID__=user?.id||null;
   document.documentElement.dataset.auth=user?'authenticated':'anonymous';
   let board=null;
+  let ownerProfile=null;
   if(user){
     const{data:existing}=await supabase.from('casting_boards').select('id,public_id').eq('owner_user_id',user.id).maybeSingle();
     if(existing)board={board_id:existing.id,public_id:existing.public_id};
+    const{data:userRow}=await supabase.from('users').select('nickname,birth_profile_id').eq('id',user.id).maybeSingle();
+    if(userRow?.birth_profile_id){
+      const{data:birth}=await supabase.from('birth_profiles').select('birth_date,birth_time,birth_time_known,gender').eq('id',userRow.birth_profile_id).maybeSingle();
+      if(birth)ownerProfile={nickname:userRow.nickname,birthDate:birth.birth_date,birthTime:birth.birth_time_known&&birth.birth_time?String(birth.birth_time).slice(0,5):'unknown',gender:birth.gender};
+    }
   }
   if(user&&!board){
     const state=JSON.parse(localStorage.getItem('reelation-state')||'null');
@@ -28,7 +34,7 @@ import('./app.js?v=visitor-main-88').then(async()=>{
       board=data?.[0]||null;
     }
   }
-  window.dispatchEvent(new CustomEvent('reelation-auth-ready',{detail:{userId:user?.id||null,board}}));
+  window.dispatchEvent(new CustomEvent('reelation-auth-ready',{detail:{userId:user?.id||null,board,ownerProfile}}));
  }catch{
    document.documentElement.dataset.auth='anonymous';
    window.dispatchEvent(new CustomEvent('reelation-auth-ready',{detail:{userId:null}}));
