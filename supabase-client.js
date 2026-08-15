@@ -23,6 +23,12 @@ export async function signInWithMagicLink(email,returnPath=location.pathname){
   return{...result,code:result.error?'MAGIC_LINK_FAILED':null};
 }
 
+export async function signInWithKakao(returnPath=location.pathname){
+  sessionStorage.setItem('reelation-auth-return',returnPath);
+  const result=await supabase.auth.signInWithOAuth({provider:'kakao',options:{redirectTo:`${location.origin}${returnPath}`}});
+  return{...result,code:result.error?'KAKAO_OAUTH_FAILED':null};
+}
+
 export async function linkKakaoIdentity(returnPath='/settings'){
   sessionStorage.setItem('reelation-auth-return',returnPath);
   const result=await supabase.auth.linkIdentity({provider:'kakao',options:{redirectTo:`${location.origin}${returnPath}`}});

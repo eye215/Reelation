@@ -1,4 +1,4 @@
-import{supabase,getVerifiedUser,signInWithMagicLink}from'./supabase-client.js?v=magic-link-72';
+import{supabase,getVerifiedUser,signInWithMagicLink,signInWithKakao}from'./supabase-client.js?v=guest-first-74';
 
 const app=document.querySelector('#app');
 const tokenFromPath=()=>location.pathname.match(/^\/reel\/([A-Za-z0-9_-]{40,128})\/?$/)?.[1]||null;
@@ -11,8 +11,9 @@ function showOwnerLogin(card,status,copy){
   if(card.querySelector('.owner-login'))return;
   copy.disabled=true;
   const panel=document.createElement('div');panel.className='owner-login';
-  panel.innerHTML='<strong>내 초대 링크를 만들려면 로그인해주세요.</strong><p>이메일로 받은 링크를 눌러 영화 소유권과 출연진 관리를 연결해요.</p><input type="email" inputmode="email" autocomplete="email" placeholder="name@example.com" aria-label="로그인 이메일" required><button type="button">이메일로 로그인 링크 받기</button>';
-  panel.querySelector('button').onclick=async()=>{const{error,code}=await signInWithMagicLink(panel.querySelector('input').value,'/invite');if(code==='INVALID_EMAIL')status.textContent='이메일 주소를 정확히 입력해주세요.';else if(error)status.textContent='로그인 링크를 보내지 못했어요.';else status.textContent='메일을 보냈어요. 받은 편지함의 링크를 눌러주세요.'};
+  panel.innerHTML='<strong>내 초대 링크를 만들려면 저장해주세요.</strong><p>카카오 또는 이메일 계정으로 영화 소유권과 출연진 관리를 연결해요.</p><button type="button" data-kakao>카카오로 저장하기</button><input type="email" inputmode="email" autocomplete="email" placeholder="name@example.com" aria-label="로그인 이메일" required><button type="button" data-email>이메일 링크로 저장하기</button>';
+  panel.querySelector('[data-kakao]').onclick=async()=>{const{error}=await signInWithKakao('/invite');if(error)status.textContent='카카오 로그인을 시작하지 못했어요.'};
+  panel.querySelector('[data-email]').onclick=async()=>{const{error,code}=await signInWithMagicLink(panel.querySelector('input').value,'/invite');if(code==='INVALID_EMAIL')status.textContent='이메일 주소를 정확히 입력해주세요.';else if(error)status.textContent='로그인 링크를 보내지 못했어요.';else status.textContent='메일을 보냈어요. 받은 편지함의 링크를 눌러주세요.'};
   card.append(panel);
 }
 
@@ -61,11 +62,8 @@ function connectGuestSubmission(){
     event.preventDefault();
     const user=await getVerifiedUser();
     if(!user){
-      const email=window.prompt('로그인 링크를 받을 이메일을 입력해주세요.');if(!email)return;
-      const{error,code}=await signInWithMagicLink(email,location.pathname+'#visitorJoin');
-      if(code==='INVALID_EMAIL')showToast('이메일 주소를 정확히 입력해주세요.');
-      else if(error)showToast('로그인 링크를 보내지 못했어요. 다시 시도해주세요.');
-      else showToast('이메일로 로그인 링크를 보냈어요.');
+      if(window.confirm('카카오 로그인으로 저장할까요?\n취소를 누르면 이메일 링크를 선택할 수 있어요.')){const{error}=await signInWithKakao(location.pathname+'#visitorJoin');if(error)showToast('카카오 로그인을 시작하지 못했어요.');return}
+      const email=window.prompt('로그인 링크를 받을 이메일을 입력해주세요.');if(!email)return;const{error,code}=await signInWithMagicLink(email,location.pathname+'#visitorJoin');if(code==='INVALID_EMAIL')showToast('이메일 주소를 정확히 입력해주세요.');else if(error)showToast('로그인 링크를 보내지 못했어요. 다시 시도해주세요.');else showToast('이메일로 로그인 링크를 보냈어요.');
       return;
     }
     const fields=new FormData(form),unknown=document.querySelector('#visitorUnknown')?.checked;

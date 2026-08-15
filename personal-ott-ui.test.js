@@ -10,8 +10,8 @@ const bootstrap=fs.readFileSync('bootstrap.js','utf8');
 test('personal OTT visual layer is mounted after legacy styles',()=>{
   assert.match(html,/personal-ott\.css\?v=personal-ott-72/);
   assert.ok(html.indexOf('personal-ott.css')>html.indexOf('ott-ui.css'));
-  assert.match(html,/bootstrap\.js\?v=hybrid-auth-73/);
-  assert.match(bootstrap,/app\.js\?v=magic-link-73/);
+  assert.match(html,/bootstrap\.js\?v=guest-first-74/);
+  assert.match(bootstrap,/app\.js\?v=guest-first-74/);
 });
 
 test('home and visitor experiences lead with full visual movie heroes',()=>{

@@ -7,7 +7,7 @@ if(recoveredPath&&location.pathname==='/'){
 window.__REELATION_AUTH_USER_ID__=null;
 document.documentElement.dataset.auth='anonymous';
 
-import('./app.js?v=magic-link-73').then(async()=>{
+import('./app.js?v=guest-first-74').then(async()=>{
  try{
   const{getVerifiedUser,supabase}=await import('./supabase-client.js?v=magic-link-72');
   window.__REELATION_SUPABASE__=supabase;
@@ -20,7 +20,7 @@ import('./app.js?v=magic-link-73').then(async()=>{
     const{data:existing}=await supabase.from('casting_boards').select('id,public_id').eq('owner_user_id',user.id).maybeSingle();
     if(existing)board={board_id:existing.id,public_id:existing.public_id};
   }
-  if(user&&location.pathname==='/invite'&&!board){
+  if(user&&!board){
     const state=JSON.parse(localStorage.getItem('reelation-state')||'null');
     if(state?.owner?.birthDate){
       const known=state.owner.birthTime&&state.owner.birthTime!=='unknown';
