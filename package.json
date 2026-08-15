@@ -2,5 +2,5 @@
   "name": "reelation-mvp",
   "private": true,
   "type": "module",
-  "scripts": { "start": "python3 server.py", "test": "node --test engine.test.js" }
+  "scripts": { "start": "python3 server.py", "test": "node --test *.test.js" }
 }
