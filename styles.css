@@ -26,3 +26,5 @@
 .btn:disabled{opacity:.4;cursor:not-allowed;box-shadow:none;transform:none}
 /* Corrected 3:2 atlas for the six 갑 day pillars. */
 .pillar-stem-0{background-image:url('assets/day-pillar-stem-0-v2.jpg')}
+/* Keep each 1:2 portrait tile undistorted; crop vertically inside wider cards. */
+.cast-art{background-size:600% auto}
