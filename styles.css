@@ -42,3 +42,4 @@
 @media(max-width:520px){.movie-hero{border-radius:28px;padding:26px 16px 40px;box-shadow:0 18px 55px rgba(64,45,80,.1)}.movie-copy h1{letter-spacing:-3px}.movie-poster{height:460px;border-radius:24px;box-shadow:0 20px 45px rgba(27,20,36,.2)}.casting-stage{padding:0;gap:12px}.bottomnav{box-shadow:0 12px 36px rgba(38,27,48,.16)}}
 .stat small strong{display:block;color:#26212b;font-size:14px;font-weight:800;letter-spacing:-.2px;margin-top:7px}.stat small span{display:block;color:#8a8190;font-size:8px;font-weight:700;letter-spacing:1px;margin-top:3px}
 .poster-stamp{font-size:0}.poster-stamp:after{content:'MAIN CHARACTER';font-size:9px;letter-spacing:2px}
+.casting-stage>.casting-card.main-character{display:none}
