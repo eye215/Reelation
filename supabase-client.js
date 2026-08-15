@@ -8,7 +8,9 @@ export const supabase=createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{
 });
 
 export async function getVerifiedUser(){
-  const{data,error}=await supabase.auth.getUser();
-  if(error)return null;
-  return data.user||null;
+  try{
+    const{data,error}=await supabase.auth.getUser();
+    if(error)return null;
+    return data.user||null;
+  }catch{return null}
 }
