@@ -12,10 +12,10 @@ test('personal OTT visual layer is mounted after legacy styles',()=>{
   assert.match(html,/reference-ott\.css\?v=mobile-ott-79/);
   assert.ok(html.indexOf('personal-ott.css')>html.indexOf('ott-ui.css'));
   assert.ok(html.indexOf('reference-ott.css')>html.indexOf('personal-ott.css'));
-  assert.match(html,/reelation-v2\.css\?v=casting-board-87/);
+  assert.match(html,/reelation-v2\.css\?v=visitor-main-88/);
   assert.ok(html.indexOf('reelation-v2.css')>html.indexOf('reference-ott.css'));
-  assert.match(html,/bootstrap\.js\?v=casting-board-87/);
-  assert.match(bootstrap,/app\.js\?v=casting-board-87/);
+  assert.match(html,/bootstrap\.js\?v=visitor-main-88/);
+  assert.match(bootstrap,/app\.js\?v=visitor-main-88/);
 });
 
 test('movie description opens from the poster as an immersive modal',()=>{
@@ -42,9 +42,18 @@ test('poster lifts before the movie modal is revealed',()=>{
 
 test('home and visitor experiences lead with full visual movie heroes',()=>{
   assert.match(app,/r10-entry-hero/);
-  assert.match(app,/visitor-hero-poster/);
+  assert.match(app,/r12-visitor-poster/);
   assert.match(css,/min-height:100svh/);
   assert.match(css,/linear-gradient/);
+});
+
+test('invite visitors see the movie first and authenticate only to participate',()=>{
+  assert.match(app,/function visitorPageV2/);
+  assert.match(app,/id="visitorJoinOpen"/);
+  assert.match(app,/id="visitorKakao"/);
+  assert.match(app,/id="visitorMagicForm"/);
+  assert.match(app,/state\.authUserId\?/);
+  assert.match(app,/isVisitor=Boolean\(getPublicId\(location\.pathname\)\)/);
 });
 
 test('cast and filmography use mobile horizontal rails',()=>{
