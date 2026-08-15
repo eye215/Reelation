@@ -1,0 +1,6 @@
+create index cast_members_birth_profile_id_idx on public.cast_members(birth_profile_id);
+create index invite_participations_invite_id_idx on public.invite_participations(invite_id);
+create index invite_participations_participant_user_id_idx on public.invite_participations(participant_user_id) where participant_user_id is not null;
+create index rankings_cast_member_id_idx on public.rankings(cast_member_id);
+create index relationship_analyses_owner_saju_id_idx on public.relationship_analyses(owner_saju_profile_id);
+create index relationship_analyses_cast_saju_id_idx on public.relationship_analyses(cast_saju_profile_id);
