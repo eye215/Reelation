@@ -7,10 +7,10 @@ const enhancements = readFileSync(new URL('./ui-enhancements.js', import.meta.ur
 
 test('owner main follows the agreed movie IA', () => {
   const order = [
-    'owner-movie-hero',
-    'owner-casting',
-    'ranking-section',
-    'owner-reelation-cta',
+    'r9-poster',
+    'r9-casting',
+    'r9-topcast',
+    'r9-share',
   ].map(token => app.indexOf(token));
   assert.ok(order.every(index => index >= 0));
   assert.deepEqual(order, [...order].sort((a, b) => a - b));
