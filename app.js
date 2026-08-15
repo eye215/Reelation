@@ -1,4 +1,4 @@
-import {analyze,ranks,RELATIONSHIP_CATEGORIES,METRICS,classifyCastTier} from './engine.js';
+import {analyze,ranks,RELATIONSHIP_CATEGORIES,METRICS,classifyCastTier,calculateSaju} from './engine.js';
 const $=s=>document.querySelector(s), app=$('#app');
 const roleKo={TURNING_POINT:'인생 전환점',LIFELONG_ALLY:'평생 조력자',GROWTH_CATALYST:'성장 촉진자',RIVAL:'라이벌',SCENE_STEALER:'씬스틸러',HIDDEN_HELPER:'숨은 조력자',LONG_TERM_PRESENCE:'오래 남는 사람',STRONG_IMPRINT:'강렬한 흔적',WILDCARD:'변수',FINAL_BOSS:'최종보스',SLOW_BURN:'천천히 타오르는 사랑',MAIN_LEAD:'주연',SECOND_LEAD:'서브 주연',END_CREDIT_FRIEND:'엔딩 크레딧 친구',LOYAL_ALLY:'든든한 동료',LONG_TERM_CAST:'오래 함께할 캐스트',SHORT_BUT_STRONG:'짧고 강렬한 인연',POWER_DUO:'파워 듀오',BEST_PARTNER:'최고의 파트너',GROWTH_PARTNER:'성장 파트너',CATALYST:'촉매',MENTOR_ENERGY:'멘토 에너지',AWAKENER:'각성자'};
 const tierKo={MAIN:'주연',SUPPORTING:'조연',FEATURED:'단역',CAMEO:'카메오'};
@@ -11,8 +11,8 @@ let state=JSON.parse(localStorage.getItem('reelation-state')||'null')||{onboarde
 const save=()=>localStorage.setItem('reelation-state',JSON.stringify(state));
 if(state.cast.some(c=>c.analysis?.scoringVersion!=='reelation-v2')){state.cast.forEach(c=>c.analysis=analyze(state.owner,c));save()}
 const displayScore=value=>Math.round(Number(value));
-const artIndex=c=>Math.abs([...String(c.id||c.nickname)].reduce((n,ch)=>n+ch.charCodeAt(0),0))%4;
-const art=c=>`<div class="cast-art art-${artIndex(c)}" aria-hidden="true"></div>`;
+const characterMeta=c=>c.analysis?.character||(()=>{const s=calculateSaju({...c,birthTimeKnown:c.birthTime!=='unknown'});return{dayPillarIndex:s.dayPillarIndex,stemIndex:s.dayStemIndex,branchIndex:s.dayBranchIndex}})();
+const art=c=>{const x=characterMeta(c);return`<div class="cast-art stem-${x.stemIndex} branch-${x.branchIndex}" data-day-pillar="${x.dayPillarIndex}" aria-hidden="true"></div>`};
 function go(path){history.pushState({},'',path);render();scrollTo(0,0)} window.onpopstate=render;
 function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),1800)}
 const role=r=>roleKo[r]||r.replaceAll('_',' ');
