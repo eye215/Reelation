@@ -1,9 +1,9 @@
 document.documentElement.dataset.auth='checking';
 window.__REELATION_AUTH_USER_ID__=null;
 document.documentElement.dataset.auth='anonymous';
-await import('./app.js?v=auth-fallback-46');
 
-try{
+import('./app.js?v=mobile-render-51').then(async()=>{
+ try{
   const{getVerifiedUser,supabase}=await import('./supabase-client.js?v=auth-fallback-46');
   window.__REELATION_SUPABASE__=supabase;
   const timeout=new Promise(resolve=>setTimeout(()=>resolve(null),3000));
@@ -20,7 +20,11 @@ try{
     }
   }
   window.dispatchEvent(new CustomEvent('reelation-auth-ready',{detail:{userId:user?.id||null,board}}));
-}catch{
-  document.documentElement.dataset.auth='anonymous';
-  window.dispatchEvent(new CustomEvent('reelation-auth-ready',{detail:{userId:null}}));
-}
+ }catch{
+   document.documentElement.dataset.auth='anonymous';
+   window.dispatchEvent(new CustomEvent('reelation-auth-ready',{detail:{userId:null}}));
+ }
+}).catch(()=>{
+ const fallback=document.querySelector('.boot-fallback');
+ if(fallback){fallback.classList.add('boot-failed');fallback.querySelector('p').textContent='앱을 불러오지 못했어요. 다시 시도해주세요.'}
+});
