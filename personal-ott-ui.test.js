@@ -12,10 +12,16 @@ test('personal OTT visual layer is mounted after legacy styles',()=>{
   assert.match(html,/reference-ott\.css\?v=mobile-ott-79/);
   assert.ok(html.indexOf('personal-ott.css')>html.indexOf('ott-ui.css'));
   assert.ok(html.indexOf('reference-ott.css')>html.indexOf('personal-ott.css'));
-  assert.match(html,/reelation-v2\.css\?v=rebuild-81/);
+  assert.match(html,/reelation-v2\.css\?v=movie-modal-82/);
   assert.ok(html.indexOf('reelation-v2.css')>html.indexOf('reference-ott.css'));
-  assert.match(html,/bootstrap\.js\?v=rebuild-81/);
-  assert.match(bootstrap,/app\.js\?v=rebuild-81/);
+  assert.match(html,/bootstrap\.js\?v=movie-modal-82/);
+  assert.match(bootstrap,/app\.js\?v=movie-modal-82/);
+});
+
+test('movie description opens from the poster as an immersive modal',()=>{
+  assert.match(app,/dialog class="r9-movie-modal"/);
+  assert.match(app,/modal\.showModal\(\)/);
+  assert.doesNotMatch(app,/section class="r9-about"/);
 });
 
 test('home and visitor experiences lead with full visual movie heroes',()=>{
