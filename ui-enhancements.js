@@ -28,9 +28,26 @@ function enhanceMovieHome(){
   if(!state||!page||page.querySelector('.movie-home-feed'))return;
   page.querySelectorAll('.relation-board-head,.relation-self,.relationship-overview,.relationship-clusters').forEach(el=>el.remove());
   const ordered=[...state.cast].sort((a,b)=>Number(b.createdAt||0)-Number(a.createdAt||0));
-  const latest=ordered[0],chemistry=[...state.cast].sort((a,b)=>b.analysis.scores.overall-a.analysis.scores.overall)[0],twist=[...state.cast].sort((a,b)=>(b.analysis.scores.impact+b.analysis.scores.conflict)-(a.analysis.scores.impact+a.analysis.scores.conflict))[0];
+  const latest=ordered[0];
+  const chemistry=[...state.cast].sort((a,b)=>b.analysis.scores.overall-a.analysis.scores.overall)[0];
+  const twist=[...state.cast].sort((a,b)=>(b.analysis.scores.impact+b.analysis.scores.conflict)-(a.analysis.scores.impact+a.analysis.scores.conflict))[0];
+  const sceneStealer=[...state.cast].sort((a,b)=>b.analysis.scores.impact-a.analysis.scores.impact)[0];
+  const castPreview=[...state.cast].sort((a,b)=>b.analysis.scores.overall-a.analysis.scores.overall).slice(0,4);
   const roleCounts=state.cast.reduce((all,person)=>{const role=ROLE_KO[person.analysis.lifeRole]||'관계 캐릭터';all[role]=(all[role]||0)+1;return all},{}),commonRole=Object.entries(roleCounts).sort((a,b)=>b[1]-a[1])[0];
-  page.insertAdjacentHTML('afterbegin',`<section class="movie-home-feed"><header class="movie-home-head"><div><span>MY MOVIE</span><h1>지금 내 영화</h1><p>${state.cast.length}명의 Cast가 함께하고 있어요.</p></div><button data-go="/invite">친구 초대</button></header><article class="main-character-strip"><img src="${imageFor(state.owner)}" alt="${state.owner.nickname}"><div><span>MAIN CHARACTER</span><b>${state.owner.nickname}</b><small>이 이야기의 주인공</small></div></article><div class="home-feed-grid">${latest?`<article class="feed-feature" onclick="location.href='/cast/${latest.id}'"><img src="${imageFor(latest)}" alt="${latest.nickname}"><div><span>NEW CAST</span><h2>${latest.nickname}</h2><b>${ROLE_KO[latest.analysis.lifeRole]||'새로운 인물'}</b><p>${relationKeyword(latest)}을 가져오는 인물이 들어왔어요.</p></div></article>`:''}<div class="feed-stack">${twist?`<article onclick="location.href='/cast/${twist.id}'"><img src="${imageFor(twist)}" alt="${twist.nickname}"><div><span>PLOT TWIST</span><b>${state.owner.nickname} × ${twist.nickname}</b><p>의외로 강한 긴장과 영향</p></div></article>`:''}${chemistry?`<article onclick="location.href='/cast/${chemistry.id}'"><img src="${imageFor(chemistry)}" alt="${chemistry.nickname}"><div><span>CHEMISTRY</span><b>${chemistry.nickname}</b><p>${ROLE_KO[chemistry.analysis.lifeRole]||'관계 캐릭터'} · ${Math.round(chemistry.analysis.scores.overall)}점</p></div></article>`:''}</div></div>${commonRole?`<article class="home-director-note"><span>DIRECTOR’S NOTE</span><b>요즘 내 영화에는 ‘${commonRole[0]}’ 역할이 가장 많이 보여요.</b><p>${commonRole[1]}명의 인물이 비슷한 방식으로 다음 장면에 영향을 주고 있어요.</p></article>`:''}<button class="view-all-cast" onclick="location.href='/cast'">전체 Cast 보기 <span>→</span></button></section>`);
+  page.insertAdjacentHTML('afterbegin',`<section class="movie-home-feed">
+    <header class="movie-home-head"><div><span>MY MOVIE</span><h1>지금 내 영화</h1><p>${state.cast.length}명의 Cast가 함께하고 있어요.</p></div><button data-go="/invite">친구 초대</button></header>
+    <article class="main-character-strip"><img src="${imageFor(state.owner)}" alt="${state.owner.nickname}"><div><span>MAIN CHARACTER</span><b>${state.owner.nickname}</b><small>이 이야기의 주인공</small></div></article>
+    ${state.cast.length?`<div class="home-feed-grid">
+      ${latest?`<article class="feed-feature" onclick="location.href='/cast/${latest.id}'"><img src="${imageFor(latest)}" alt="${latest.nickname}"><div><span>NEW CAST</span><h2>${latest.nickname}</h2><b>${ROLE_KO[latest.analysis.lifeRole]||'새로운 인물'}</b><p>${relationKeyword(latest)}을 가져오는 인물이 들어왔어요.</p></div></article>`:''}
+      <div class="feed-stack">
+        ${chemistry?`<article onclick="location.href='/cast/${chemistry.id}'"><img src="${imageFor(chemistry)}" alt="${chemistry.nickname}"><div><span>CHEMISTRY</span><b>${chemistry.nickname}</b><p>${ROLE_KO[chemistry.analysis.lifeRole]||'관계 캐릭터'} · ${Math.round(chemistry.analysis.scores.overall)}점</p></div></article>`:''}
+        ${twist?`<article onclick="location.href='/cast/${twist.id}'"><img src="${imageFor(twist)}" alt="${twist.nickname}"><div><span>PLOT TWIST</span><b>${state.owner.nickname} × ${twist.nickname}</b><p>의외로 강한 긴장과 영향</p></div></article>`:''}
+        ${sceneStealer?`<article onclick="location.href='/cast/${sceneStealer.id}'"><img src="${imageFor(sceneStealer)}" alt="${sceneStealer.nickname}"><div><span>SCENE STEALER</span><b>${sceneStealer.nickname}</b><p>지금 가장 존재감이 큰 사람</p></div></article>`:''}
+      </div>
+    </div>`:`<div class="home-empty"><b>아직 등장인물이 없어요.</b><p>친구를 초대하면 이곳에 관계의 장면이 쌓여요.</p><button data-go="/invite">첫 번째 친구 초대하기</button></div>`}
+    ${castPreview.length?`<section class="home-cast-preview"><header><div><span>CAST</span><h2>내 등장인물</h2></div><button onclick="location.href='/cast'">전체 보기 →</button></header><div>${castPreview.map(person=>`<article onclick="location.href='/cast/${person.id}'"><img src="${imageFor(person)}" alt="${person.nickname}"><b>${person.nickname}</b><small>${ROLE_KO[person.analysis.lifeRole]||'관계 캐릭터'}</small></article>`).join('')}</div></section>`:''}
+    ${commonRole?`<article class="home-director-note"><span>DIRECTOR’S NOTE</span><b>요즘 내 영화에는 ‘${commonRole[0]}’ 역할이 가장 많이 보여요.</b><p>${commonRole[1]}명의 인물이 비슷한 방식으로 다음 장면에 영향을 주고 있어요.</p></article>`:''}
+  </section>`);
 }
 
 function enhanceRelationshipStory(){
@@ -170,7 +187,7 @@ function enhanceRelationshipStats(){
   });
 }
 
-const enhance=()=>{enhanceRouteSurface();enhanceNavigation();enhanceBoardMap();enhanceMovieHome();enhanceRelationshipStory();enhanceRelationshipStats();enhanceRankLabels();enhanceScoreLabels();enhanceNarrative()};
+const enhance=()=>{enhanceRouteSurface();enhanceNavigation();enhanceMovieHome();enhanceRelationshipStory();enhanceRelationshipStats();enhanceRankLabels();enhanceScoreLabels();enhanceNarrative()};
 const observer=new MutationObserver(enhance);
 observer.observe(document.querySelector('#app'),{childList:true,subtree:true});
 enhance();
