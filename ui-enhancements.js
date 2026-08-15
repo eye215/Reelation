@@ -12,6 +12,8 @@ const rankLabel=(rank,total)=>`${total}명 중 ${rank}위 <small>(상위 ${Math.
 const withPoint=value=>`${Math.round(Number(value))}점`;
 const ROLE_KO={TURNING_POINT:'인생 전환점',LIFELONG_ALLY:'평생 조력자',GROWTH_CATALYST:'성장 촉진자',RIVAL:'라이벌',SCENE_STEALER:'씬스틸러',HIDDEN_HELPER:'숨은 조력자',LONG_TERM_PRESENCE:'오래 남는 사람',STRONG_IMPRINT:'강렬한 흔적',WILDCARD:'변수',FINAL_BOSS:'최종보스'};
 const GENRE_KO={ROMANCE:'로맨스',ROMANTIC_COMEDY:'로맨틱 코미디',MELODRAMA:'멜로',NOIR:'느와르',PSYCHOLOGICAL_THRILLER:'심리 스릴러',HEALING_DRAMA:'힐링 드라마',GROWTH_DRAMA:'성장 드라마',MYSTERY:'미스터리',FANTASY:'판타지'};
+const STEMS=['갑','을','병','정','무','기','경','신','임','계'];
+const BRANCHES=['자','축','인','묘','진','사','오','미','신','유','술','해'];
 const topic=name=>{const last=name.charCodeAt(name.length-1);return last>=0xac00&&last<=0xd7a3&&(last-0xac00)%28?`${name}은`:`${name}는`};
 const relationKeyword=person=>{const s=person.analysis.scores;return s.growth>=70?'성장':s.stability>=70?'편안함':s.conflict>=70?'긴장':s.impact>=75?'강한 영향':'호기심'};
 
@@ -41,6 +43,18 @@ function enhanceRelationshipStory(){
   if(heads[0])heads[0].innerHTML='관계의 네 가지 얼굴 <small>CHEMISTRY</small>';
   if(heads[1])heads[1].innerHTML='우리 사이의 리듬 <small>DYNAMIC</small>';
   if(heads[2])heads[2].innerHTML='우리 이야기 <small>STORY</small>';
+  const page=hero.closest('main.page');
+  const deleteArea=page?.querySelector('#delete')?.closest('.section-head');
+  if(page&&!page.querySelector('.relationship-why')){
+    const ownerSaju=calculateSaju({...state.owner,birthTimeKnown:state.owner.birthTime!=='unknown'});
+    const memberSaju=calculateSaju({...member,birthTimeKnown:member.birthTime!=='unknown'});
+    const pillar=saju=>`${STEMS[saju.dayStemIndex]}${BRANCHES[saju.dayBranchIndex]}`;
+    const why=document.createElement('details');
+    why.className='relationship-why';
+    why.innerHTML=`<summary><span><small>WHY?</small>왜 이렇게 나왔나요?</span><i>+</i></summary><div><p>두 사람의 일주와 오행 관계를 점수화한 뒤, 영향력·안정성·성장성·충돌성의 조합으로 Role과 Genre를 정했어요.</p><dl><div><dt>${state.owner.nickname}</dt><dd>${pillar(ownerSaju)} · ${ownerSaju.dayMasterElement}</dd></div><div><dt>${member.nickname}</dt><dd>${pillar(memberSaju)} · ${memberSaju.dayMasterElement}</dd></div><div><dt>분석 신뢰도</dt><dd>${member.analysis.confidence==='HIGH'?'출생 시간 반영':'출생 시간 미상 기준'}</dd></div></dl><small>현재 결과는 양력 기준 ${member.analysis.sajuEngineVersion||'saju-v2-gregorian'} 엔진으로 계산됩니다. 영화 언어는 관계를 이해하기 쉽게 표현한 해석 레이어예요.</small></div>`;
+    page.insertBefore(why,deleteArea||null);
+    why.addEventListener('toggle',()=>{why.querySelector('summary i').textContent=why.open?'−':'+'});
+  }
 }
 
 function enhanceBoardMap(){

@@ -10,6 +10,8 @@ try{
   const user=await Promise.race([getVerifiedUser().catch(()=>null),timeout]);
   window.__REELATION_AUTH_USER_ID__=user?.id||null;
   document.documentElement.dataset.auth=user?'authenticated':'anonymous';
+  window.dispatchEvent(new CustomEvent('reelation-auth-ready',{detail:{userId:user?.id||null}}));
 }catch{
   document.documentElement.dataset.auth='anonymous';
+  window.dispatchEvent(new CustomEvent('reelation-auth-ready',{detail:{userId:null}}));
 }
