@@ -2,7 +2,7 @@ document.documentElement.dataset.auth='checking';
 window.__REELATION_AUTH_USER_ID__=null;
 document.documentElement.dataset.auth='anonymous';
 
-import('./app.js?v=mobile-render-51').then(async()=>{
+import('./app.js?v=owner-entry-53').then(async()=>{
  try{
   const{getVerifiedUser,supabase}=await import('./supabase-client.js?v=auth-fallback-46');
   window.__REELATION_SUPABASE__=supabase;
