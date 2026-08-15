@@ -8,13 +8,13 @@ const showToast=message=>{const toast=document.querySelector('#toast');if(!toast
 async function connectOwnerInvite(){
   if(location.pathname!=='/invite')return;
   const copy=document.querySelector('#copy'),urlBox=document.querySelector('#inviteUrl'),card=document.querySelector('.invite-card');
-  if(!copy||!urlBox||copy.dataset.serverBound)return;
+  if(!copy||!urlBox||copy.dataset.serverBound||copy.dataset.authWaiting)return;
   copy.dataset.serverBound='true';
-  const status=document.createElement('p');status.className='server-invite-status';status.textContent='서버 연결 상태를 확인하고 있어요.';card.append(status);
+  const status=card.querySelector('.server-invite-status')||document.createElement('p');status.className='server-invite-status';status.textContent='서버 연결 상태를 확인하고 있어요.';if(!status.isConnected)card.append(status);
   const user=await getVerifiedUser();
-  if(!user){status.textContent='로그인 후 실제 초대 링크를 만들 수 있어요. 현재 링크는 이 브라우저에서만 동작하는 미리보기입니다.';return}
+  if(!user){status.textContent='안전한 초대 링크를 준비하고 있어요.';delete copy.dataset.serverBound;copy.dataset.authWaiting='true';window.addEventListener('reelation-auth-ready',()=>{delete copy.dataset.authWaiting;connectOwnerInvite()},{once:true});return}
   const{data:board,error:boardError}=await supabase.from('casting_boards').select('id').eq('owner_user_id',user.id).maybeSingle();
-  if(boardError||!board){status.textContent='먼저 내 정보를 등록해 Reelation 보드를 만들어주세요.';copy.disabled=true;return}
+  if(boardError||!board){const retries=Number(copy.dataset.retries||0)+1;copy.dataset.retries=String(retries);if(retries>=5){status.textContent='보드를 연결하지 못했어요. 페이지를 새로고침해주세요.';copy.disabled=true;return}status.textContent='Reelation 보드를 생성하고 있어요.';delete copy.dataset.serverBound;copy.dataset.authWaiting='true';setTimeout(()=>{delete copy.dataset.authWaiting;connectOwnerInvite()},800);return}
   status.textContent='실제 초대 링크를 만들 준비가 됐어요.';
   copy.textContent='실제 링크 만들기';
   copy.onclick=async()=>{

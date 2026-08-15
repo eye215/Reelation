@@ -13,11 +13,12 @@
   <link rel="stylesheet" href="/social-ui.css?v=invite-live-42" />
   <link rel="stylesheet" href="/owner-sync.css?v=owner-sync-44" />
   <link rel="stylesheet" href="/relation-direction.css?v=relationship-why-47" />
+  <link rel="stylesheet" href="/boot-fallback.css?v=mobile-blank-49" />
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4262026322772164"
     crossorigin="anonymous"></script>
 </head>
 <body>
-  <div id="app"></div>
+  <div id="app"><main class="boot-fallback"><div class="boot-mark">Relation.</div><p>관계를 불러오고 있어요.</p><button type="button" onclick="location.reload()">다시 불러오기</button></main></div>
   <!-- 디스플레이 -->
   <ins class="adsbygoogle"
     style="display:block"
@@ -29,9 +30,10 @@
     (adsbygoogle = window.adsbygoogle || []).push({});
   </script>
   <div id="toast" class="toast" aria-live="polite"></div>
-  <script type="module" src="/bootstrap.js?v=auth-ready-47"></script>
+  <script type="module" src="/bootstrap.js?v=owner-bootstrap-48"></script>
   <script type="module" src="/ui-enhancements.js?v=relationship-why-47"></script>
-  <script type="module" src="/invite-integration.js?v=invite-submit-43"></script>
+  <script type="module" src="/invite-integration.js?v=owner-bootstrap-48"></script>
   <script type="module" src="/owner-sync.js?v=owner-sync-44"></script>
+  <script>setTimeout(function(){var fallback=document.querySelector('.boot-fallback');if(fallback){fallback.classList.add('boot-failed');fallback.querySelector('p').textContent='앱을 불러오지 못했어요. 네트워크를 확인하고 다시 시도해주세요.';}},5000);</script>
 </body>
 </html>
