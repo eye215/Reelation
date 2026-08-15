@@ -4,6 +4,7 @@ const app=document.querySelector('#app');
 const tokenFromPath=()=>location.pathname.match(/^\/reel\/([A-Za-z0-9_-]{40,128})\/?$/)?.[1]||null;
 const errorCopy={INVALID_TOKEN:'링크 형식이 올바르지 않아요.',INVITE_NOT_FOUND:'존재하지 않거나 변경된 초대 링크예요.',INVITE_DISABLED:'초대가 종료된 링크예요.',INVITE_EXPIRED:'사용 기간이 만료된 링크예요.'};
 const showToast=message=>{const toast=document.querySelector('#toast');if(!toast)return;toast.textContent=message;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),1800)};
+const copyText=async value=>{try{await navigator.clipboard.writeText(value);return true}catch{const input=document.createElement('textarea');input.value=value;input.readOnly=true;input.style.position='fixed';input.style.opacity='0';document.body.append(input);input.select();let copied=false;try{copied=document.execCommand('copy')}catch{}input.remove();return copied}};
 
 function showOwnerLogin(card,status,copy){
   if(card.querySelector('.owner-login'))return;
@@ -33,8 +34,8 @@ async function connectOwnerInvite(){
     const{data,error}=await supabase.functions.invoke('create-invite',{body:{boardId:board.id}});
     if(error||!data?.url){status.textContent='링크를 만들지 못했어요. 잠시 후 다시 시도해주세요.';copy.disabled=false;copy.textContent='다시 시도';return}
     urlBox.textContent=data.url;status.textContent=`${new Date(data.expiresAt).toLocaleDateString('ko-KR')}까지 사용할 수 있어요.`;
-    try{await navigator.clipboard.writeText(data.url);showToast('실제 친구 초대 링크를 복사했어요')}catch{showToast('링크를 길게 눌러 복사해주세요')}
-    copy.disabled=false;copy.textContent='링크 다시 복사';copy.onclick=()=>navigator.clipboard.writeText(data.url).then(()=>showToast('링크를 복사했어요'));
+    const copied=await copyText(data.url);showToast(copied?'친구 초대 링크를 복사했어요':'링크를 길게 눌러 복사해주세요');
+    copy.disabled=false;copy.textContent='링크 다시 복사';copy.onclick=async()=>{const copiedAgain=await copyText(data.url);showToast(copiedAgain?'링크를 복사했어요':'링크를 길게 눌러 복사해주세요')};
   };
 }
 
@@ -43,9 +44,9 @@ async function resolveVisitorInvite(){
   const{data,error}=await supabase.functions.invoke('resolve-invite',{body:{token}});
   if(error||!data?.valid){
     const code=data?.error||error?.context?.error||'INVITE_NOT_FOUND';
-    app.innerHTML=`<main class="server-invite-error"><span>RELATION.</span><h1>${errorCopy[code]||'초대 링크를 확인할 수 없어요.'}</h1><p>링크를 보낸 친구에게 새로운 초대 링크를 요청해주세요.</p><button onclick="location.href='/'">Relation 둘러보기</button></main>`;return;
+    app.innerHTML=`<main class="server-invite-error"><span>Reelation.</span><h1>${errorCopy[code]||'초대 링크를 확인할 수 없어요.'}</h1><p>링크를 보낸 친구에게 새로운 초대 링크를 요청해주세요.</p><button onclick="location.href='/'">Reelation 둘러보기</button></main>`;return;
   }
-  app.innerHTML=`<main class="server-invite-entry"><header><span>RELATION.</span><small>친구의 영화에 초대받았어요</small></header><section><div class="invite-owner-dot">●</div><p>${data.ownerNickname}의 영화 · 현재 ${data.castCount}명 출연 중</p><h1>나는 이 사람의<br>이야기에서 누구일까?</h1><p class="entry-copy">생년월일을 입력하면 나의 Character Still과 두 사람의 관계 역할이 바로 나타나요.</p><button id="enterInvite">내 캐릭터 확인하기</button></section></main>`;
+  app.innerHTML=`<main class="server-invite-entry"><header><span>Reelation.</span><small>친구의 영화에 초대받았어요</small></header><section><div class="invite-owner-dot">●</div><p>${data.ownerNickname}의 영화 · 현재 ${data.castCount}명 출연 중</p><h1>나는 이 사람의<br>이야기에서 누구일까?</h1><p class="entry-copy">생년월일을 입력하면 나의 Character Still과 두 사람의 관계 역할이 바로 나타나요.</p><button id="enterInvite">내 캐릭터 확인하기</button></section></main>`;
   document.querySelector('#enterInvite').onclick=()=>{
     const saved=JSON.parse(localStorage.getItem('reelation-state')||'null');if(saved){saved.board.publicId=token;saved.invite=true;saved.owner.nickname=data.ownerNickname;saved.cast=[];saved.authUserId=null;localStorage.setItem('reelation-state',JSON.stringify(saved))}sessionStorage.setItem('reelation-valid-invite',token);location.reload();
   };
