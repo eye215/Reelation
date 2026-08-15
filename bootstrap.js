@@ -11,7 +11,11 @@ import('./app.js?v=ott-detail-66').then(async()=>{
   window.__REELATION_AUTH_USER_ID__=user?.id||null;
   document.documentElement.dataset.auth=user?'authenticated':'anonymous';
   let board=null;
-  if(user&&location.pathname==='/invite'){
+  if(user){
+    const{data:existing}=await supabase.from('casting_boards').select('id,public_id').eq('owner_user_id',user.id).maybeSingle();
+    if(existing)board={board_id:existing.id,public_id:existing.public_id};
+  }
+  if(user&&location.pathname==='/invite'&&!board){
     const state=JSON.parse(localStorage.getItem('reelation-state')||'null');
     if(state?.owner?.birthDate){
       const known=state.owner.birthTime&&state.owner.birthTime!=='unknown';

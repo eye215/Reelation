@@ -10,10 +10,10 @@ const functionErrorCode=async(data,error,fallback)=>{if(data?.error)return data.
 function showOwnerLogin(card,status,copy){
   if(card.querySelector('.owner-login'))return;
   copy.disabled=true;
-  const form=document.createElement('form');form.className='owner-login';
-  form.innerHTML='<strong>내 초대 링크를 만들려면 로그인해주세요.</strong><p>비밀번호 없이 이메일로 로그인 링크를 보내드려요.</p><label><span>이메일</span><input type="email" name="email" autocomplete="email" required placeholder="name@example.com"></label><button type="submit">로그인 링크 받기</button>';
-  form.onsubmit=async event=>{event.preventDefault();const button=form.querySelector('button'),email=new FormData(form).get('email');button.disabled=true;button.textContent='보내는 중…';const{error}=await supabase.auth.signInWithOtp({email,options:{emailRedirectTo:`${location.origin}/invite`}});if(error){status.textContent='로그인 메일을 보내지 못했어요. 이메일을 확인해주세요.';button.disabled=false;button.textContent='다시 보내기';return}form.innerHTML='<strong>메일을 확인해주세요.</strong><p>받은 로그인 링크를 누르면 이 화면으로 돌아와 실제 초대 링크를 만들 수 있어요.</p>';status.textContent='로그인 링크를 보냈어요.'};
-  card.append(form);
+  const panel=document.createElement('div');panel.className='owner-login';
+  panel.innerHTML='<strong>내 초대 링크를 만들려면 로그인해주세요.</strong><p>카카오 계정으로 영화 소유권과 출연진 관리를 안전하게 연결해요.</p><button type="button">카카오로 계속하기</button>';
+  panel.querySelector('button').onclick=async()=>{const{error}=await supabase.auth.signInWithOAuth({provider:'kakao',options:{redirectTo:`${location.origin}/invite`}});if(error)status.textContent='카카오 로그인을 시작하지 못했어요.'};
+  card.append(panel);
 }
 
 async function connectOwnerInvite(){
