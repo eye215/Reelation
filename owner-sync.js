@@ -1,4 +1,4 @@
-import { supabase, getVerifiedUser } from './supabase-client.js?v=auth-singleton-57';
+import { supabase, getVerifiedUser } from './supabase-client.js?v=auth-provider-69';
 
 const app = document.querySelector('#app');
 let syncing = false;

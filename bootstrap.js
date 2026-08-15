@@ -1,10 +1,15 @@
 document.documentElement.dataset.auth='checking';
+const recoveredPath=sessionStorage.getItem('reelation-spa-path');
+if(recoveredPath&&location.pathname==='/'){
+  sessionStorage.removeItem('reelation-spa-path');
+  history.replaceState({},'',recoveredPath);
+}
 window.__REELATION_AUTH_USER_ID__=null;
 document.documentElement.dataset.auth='anonymous';
 
 import('./app.js?v=ott-detail-66').then(async()=>{
  try{
-  const{getVerifiedUser,supabase}=await import('./supabase-client.js?v=auth-singleton-57');
+  const{getVerifiedUser,supabase}=await import('./supabase-client.js?v=auth-provider-69');
   window.__REELATION_SUPABASE__=supabase;
   const timeout=new Promise(resolve=>setTimeout(()=>resolve(null),3000));
   let user=await Promise.race([getVerifiedUser().catch(()=>null),timeout]);

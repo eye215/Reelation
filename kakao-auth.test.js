@@ -4,6 +4,9 @@ import fs from 'node:fs';
 const app=fs.readFileSync('app.js','utf8');
 const client=fs.readFileSync('supabase-client.js','utf8');
 const invite=fs.readFileSync('invite-integration.js','utf8');
+const bootstrap=fs.readFileSync('bootstrap.js','utf8');
+const session=fs.readFileSync('auth-session.js','utf8');
+const ownerSync=fs.readFileSync('owner-sync.js','utf8');
 const migration=fs.readFileSync('supabase/migrations/20260816103000_add_kakao_auth_layer.sql','utf8');
 
 test('owner onboarding requires Kakao OAuth before birth submission',()=>{
@@ -17,6 +20,10 @@ test('Kakao provider availability is checked and shared across owner and invite 
   assert.match(client,/KAKAO_PROVIDER_DISABLED/);
   assert.match(invite,/signInWithKakao/);
   assert.doesNotMatch(invite,/signInWithOAuth/);
+});
+test('every browser module imports the same Supabase singleton URL',()=>{
+  for(const source of [app,invite,bootstrap,session,ownerSync])assert.doesNotMatch(source,/supabase-client\.js\?v=auth-singleton-57/);
+  for(const source of [app,invite,bootstrap,session,ownerSync])assert.match(source,/supabase-client\.js\?v=auth-provider-69/);
 });
 test('Kakao identity creates a public profile without duplicating provider ids',()=>{
   assert.match(migration,/handle_new_auth_user/);
