@@ -18,3 +18,6 @@ test('birth profile remains separate and is attached during owner bootstrap',()=
   assert.match(migration,/insert into public\.birth_profiles/);
   assert.match(migration,/birth_profile_id=v_birth_id/);
 });
+test('visitor shell reuses the single global toast region',()=>{
+  assert.match(app,/function visitorLayout\(content\)\{app\.innerHTML=`<div class="visitor-shell">\$\{content\}<\/div>`/);
+});
