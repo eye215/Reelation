@@ -40,5 +40,18 @@ async function resolveVisitorInvite(){
   };
 }
 
-const observer=new MutationObserver(connectOwnerInvite);observer.observe(app,{childList:true,subtree:true});
-connectOwnerInvite();resolveVisitorInvite();
+function connectGuestSubmission(){
+  const token=tokenFromPath();if(!token||sessionStorage.getItem('reelation-valid-invite')!==token)return;
+  const form=document.querySelector('#visitorForm');if(!form||form.dataset.serverBound)return;
+  form.dataset.serverBound='true';const localSubmit=form.onsubmit;
+  form.onsubmit=async event=>{
+    event.preventDefault();const fields=new FormData(form),unknown=document.querySelector('#visitorUnknown')?.checked;
+    const submit=form.querySelector('button[type="submit"]');submit.disabled=true;submit.textContent='관계를 연결하는 중…';
+    const{data,error}=await supabase.functions.invoke('submit-invite',{body:{token,nickname:fields.get('nickname'),birthDate:fields.get('birthDate'),birthTime:unknown?null:fields.get('birthTime'),birthTimeKnown:!unknown,gender:fields.get('gender'),consentVersion:'invite-v1'}});
+    if(error||!data?.ok){const code=data?.error||'SUBMISSION_FAILED';const messages={DUPLICATE_PARTICIPATION:'이미 이 링크에 참여한 정보예요.',INVITE_INVALID:'초대가 종료되었거나 만료됐어요.',INVALID_BIRTH_DATE:'생년월일을 확인해주세요.',INVALID_BIRTH_TIME:'출생 시간을 확인해주세요.'};submit.disabled=false;submit.textContent='다시 시도';showToast(messages[code]||'저장하지 못했어요. 다시 시도해주세요.');return}
+    form.dataset.castMemberId=data.castMemberId;await localSubmit?.call(form,event);showToast('친구의 Board에 안전하게 참여했어요');
+  };
+}
+
+const connect=()=>{connectOwnerInvite();connectGuestSubmission()};const observer=new MutationObserver(connect);observer.observe(app,{childList:true,subtree:true});
+connect();resolveVisitorInvite();
