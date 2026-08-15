@@ -60,6 +60,8 @@ Deno.serve(async (req) => {
       const { error } = await admin.from('genre_analyses').upsert({ relationship_analysis_id: analysis.id, genre: genre.toUpperCase(), score: Math.round(category.score), role: category.role }, { onConflict: 'relationship_analysis_id,genre' });
       if (error) throw error;
     }
+    const { error: rankingError } = await admin.rpc('recalculate_board_rankings', { p_board_id: board.id });
+    if (rankingError) throw rankingError;
     await admin.from('analysis_jobs').update({ status: 'DONE', last_error: null, updated_at: new Date().toISOString() }).eq('id', job.id);
     return json({ ok: true, analysisId: analysis.id, status: 'DONE', calculationScope: 'DAY_PILLAR_MVP' });
   } catch (error) {

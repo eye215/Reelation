@@ -58,10 +58,18 @@ function connectGuestSubmission(){
   const form=document.querySelector('#visitorForm');if(!form||form.dataset.serverBound)return;
   form.dataset.serverBound='true';const localSubmit=form.onsubmit;
   form.onsubmit=async event=>{
-    event.preventDefault();const fields=new FormData(form),unknown=document.querySelector('#visitorUnknown')?.checked;
+    event.preventDefault();
+    const user=await getVerifiedUser();
+    if(!user){
+      sessionStorage.setItem('reelation-login-return',location.pathname+'#visitorJoin');
+      const{error}=await supabase.auth.signInWithOAuth({provider:'kakao',options:{redirectTo:`${location.origin}${location.pathname}#visitorJoin`}});
+      if(error)showToast('카카오 로그인을 시작하지 못했어요. 다시 시도해주세요.');
+      return;
+    }
+    const fields=new FormData(form),unknown=document.querySelector('#visitorUnknown')?.checked;
     const submit=form.querySelector('button[type="submit"]');submit.disabled=true;submit.textContent='관계를 연결하는 중…';
-    const{data,error}=await supabase.functions.invoke('submit-invite',{body:{token,nickname:fields.get('nickname'),birthDate:fields.get('birthDate'),birthTime:unknown?null:fields.get('birthTime'),birthTimeKnown:!unknown,gender:fields.get('gender'),consentVersion:'invite-v1'}});
-    if(error||!data?.ok){const code=await functionErrorCode(data,error,'SUBMISSION_FAILED');const messages={DUPLICATE_PARTICIPATION:'이미 이 링크에 참여한 정보예요.',INVITE_INVALID:'초대가 종료되었거나 만료됐어요.',INVALID_TOKEN:'초대 링크를 확인해주세요.',INVALID_NICKNAME:'닉네임을 확인해주세요.',INVALID_BIRTH_DATE:'생년월일을 확인해주세요.',INVALID_BIRTH_TIME:'출생 시간을 확인해주세요.',INVALID_GENDER:'성별을 확인해주세요.',CONSENT_REQUIRED:'개인정보 이용 동의가 필요해요.'};submit.disabled=false;submit.textContent='다시 시도';showToast(messages[code]||'저장하지 못했어요. 다시 시도해주세요.');return}
+    const{data,error}=await supabase.functions.invoke('submit-invite-auth',{body:{token,nickname:fields.get('nickname'),birthDate:fields.get('birthDate'),birthTime:unknown?null:fields.get('birthTime'),birthTimeKnown:!unknown,gender:fields.get('gender'),consentVersion:'invite-v1'}});
+    if(error||!data?.ok){const code=await functionErrorCode(data,error,'SUBMISSION_FAILED');const messages={AUTH_REQUIRED:'참여하려면 카카오 로그인이 필요해요.',DUPLICATE_PARTICIPATION:'이미 참여했어요. 기존 캐릭터를 확인해주세요.',INVITE_INVALID:'초대가 종료되었거나 만료됐어요.',INVALID_TOKEN:'초대 링크를 확인해주세요.',INVALID_NICKNAME:'닉네임을 확인해주세요.',INVALID_BIRTH_DATE:'생년월일을 확인해주세요.',INVALID_BIRTH_TIME:'출생 시간을 확인해주세요.',INVALID_GENDER:'성별을 확인해주세요.',CONSENT_REQUIRED:'개인정보 이용 동의가 필요해요.'};submit.disabled=false;submit.textContent='다시 시도';showToast(messages[code]||'저장하지 못했어요. 다시 시도해주세요.');return}
     form.dataset.castMemberId=data.castMemberId;await localSubmit?.call(form,event);showToast('친구의 Board에 안전하게 참여했어요');
   };
 }
