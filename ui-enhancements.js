@@ -84,7 +84,9 @@ function enhanceRelationshipStory(){
 function enhanceBoardMap(){
   if(location.pathname!=='/board'&&location.pathname!=='/')return;
   const state=readState(),page=document.querySelector('.reel-page');
-  if(!state||!page||page.querySelector('.relation-board-head'))return;
+  // The relationship-map experiment predates the final Personal OTT home.
+  // Never decorate the owner movie screen with that retired information architecture.
+  if(!state||!page||page.classList.contains('owner-main')||page.querySelector('.relation-board-head'))return;
   const groups=[
     {title:'나를 성장시키는 사람',roles:['TURNING_POINT','GROWTH_CATALYST','RIVAL','FINAL_BOSS']},
     {title:'마음이 편해지는 사람',roles:['LIFELONG_ALLY','HIDDEN_HELPER','LONG_TERM_PRESENCE']},
