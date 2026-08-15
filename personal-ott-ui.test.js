@@ -12,10 +12,10 @@ test('personal OTT visual layer is mounted after legacy styles',()=>{
   assert.match(html,/reference-ott\.css\?v=mobile-ott-79/);
   assert.ok(html.indexOf('personal-ott.css')>html.indexOf('ott-ui.css'));
   assert.ok(html.indexOf('reference-ott.css')>html.indexOf('personal-ott.css'));
-  assert.match(html,/reelation-v2\.css\?v=visitor-main-88/);
+  assert.match(html,/reelation-v2\.css\?v=session-restore-89/);
   assert.ok(html.indexOf('reelation-v2.css')>html.indexOf('reference-ott.css'));
-  assert.match(html,/bootstrap\.js\?v=visitor-main-88/);
-  assert.match(bootstrap,/app\.js\?v=visitor-main-88/);
+  assert.match(html,/bootstrap\.js\?v=session-restore-89/);
+  assert.match(bootstrap,/app\.js\?v=session-restore-89/);
 });
 
 test('movie description opens from the poster as an immersive modal',()=>{
@@ -54,6 +54,13 @@ test('invite visitors see the movie first and authenticate only to participate',
   assert.match(app,/id="visitorMagicForm"/);
   assert.match(app,/state\.authUserId\?/);
   assert.match(app,/isVisitor=Boolean\(getPublicId\(location\.pathname\)\)/);
+});
+
+test('returning Kakao sessions restore saved birth profile without re-entry',()=>{
+  assert.match(bootstrap,/ownerProfile/);
+  assert.match(bootstrap,/from\('birth_profiles'\)/);
+  assert.match(app,/userId&&board&&ownerProfile/);
+  assert.match(app,/history\.replaceState\(\{\},'','\/board'\)/);
 });
 
 test('cast and filmography use mobile horizontal rails',()=>{
