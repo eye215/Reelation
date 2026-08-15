@@ -16,7 +16,8 @@ test('owner can create locally before choosing a save method',()=>{
   assert.match(app,/signInWithMagicLink/);
   assert.match(app,/p_birth_date/);
   assert.match(app,/saveChoice\(\)/);
-  assert.match(app,/p==\='\/start'\)startPage\(\)/);
+  assert.match(app,/p==\='\/start'\)homePage\(\)/);
+  assert.match(app,/signInWithKakao\('\/board'\)/);
 });
 test('invite participation uses the same email magic-link identity',()=>{
   assert.match(invite,/signInWithMagicLink/);
