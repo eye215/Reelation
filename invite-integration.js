@@ -5,6 +5,7 @@ const tokenFromPath=()=>location.pathname.match(/^\/reel\/([A-Za-z0-9_-]{40,128}
 const errorCopy={INVALID_TOKEN:'링크 형식이 올바르지 않아요.',INVITE_NOT_FOUND:'존재하지 않거나 변경된 초대 링크예요.',INVITE_DISABLED:'초대가 종료된 링크예요.',INVITE_EXPIRED:'사용 기간이 만료된 링크예요.'};
 const showToast=message=>{const toast=document.querySelector('#toast');if(!toast)return;toast.textContent=message;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),1800)};
 const copyText=async value=>{try{await navigator.clipboard.writeText(value);return true}catch{const input=document.createElement('textarea');input.value=value;input.readOnly=true;input.style.position='fixed';input.style.opacity='0';document.body.append(input);input.select();let copied=false;try{copied=document.execCommand('copy')}catch{}input.remove();return copied}};
+const functionErrorCode=async(data,error,fallback)=>{if(data?.error)return data.error;try{const payload=await error?.context?.clone?.().json();if(payload?.error)return payload.error}catch{}return fallback};
 
 function showOwnerLogin(card,status,copy){
   if(card.querySelector('.owner-login'))return;
@@ -43,7 +44,7 @@ async function resolveVisitorInvite(){
   const token=tokenFromPath();if(!token||sessionStorage.getItem('reelation-valid-invite')===token)return;
   const{data,error}=await supabase.functions.invoke('resolve-invite',{body:{token}});
   if(error||!data?.valid){
-    const code=data?.error||error?.context?.error||'INVITE_NOT_FOUND';
+    const code=await functionErrorCode(data,error,'INVITE_NOT_FOUND');
     app.innerHTML=`<main class="server-invite-error"><span>Reelation.</span><h1>${errorCopy[code]||'초대 링크를 확인할 수 없어요.'}</h1><p>링크를 보낸 친구에게 새로운 초대 링크를 요청해주세요.</p><button onclick="location.href='/'">Reelation 둘러보기</button></main>`;return;
   }
   app.innerHTML=`<main class="server-invite-entry"><header><span>Reelation.</span><small>친구의 영화에 초대받았어요</small></header><section><div class="invite-owner-dot">●</div><p>${data.ownerNickname}의 영화 · 현재 ${data.castCount}명 출연 중</p><h1>나는 이 사람의<br>이야기에서 누구일까?</h1><p class="entry-copy">생년월일을 입력하면 나의 Character Still과 두 사람의 관계 역할이 바로 나타나요.</p><button id="enterInvite">내 캐릭터 확인하기</button></section></main>`;
@@ -60,7 +61,7 @@ function connectGuestSubmission(){
     event.preventDefault();const fields=new FormData(form),unknown=document.querySelector('#visitorUnknown')?.checked;
     const submit=form.querySelector('button[type="submit"]');submit.disabled=true;submit.textContent='관계를 연결하는 중…';
     const{data,error}=await supabase.functions.invoke('submit-invite',{body:{token,nickname:fields.get('nickname'),birthDate:fields.get('birthDate'),birthTime:unknown?null:fields.get('birthTime'),birthTimeKnown:!unknown,gender:fields.get('gender'),consentVersion:'invite-v1'}});
-    if(error||!data?.ok){const code=data?.error||'SUBMISSION_FAILED';const messages={DUPLICATE_PARTICIPATION:'이미 이 링크에 참여한 정보예요.',INVITE_INVALID:'초대가 종료되었거나 만료됐어요.',INVALID_BIRTH_DATE:'생년월일을 확인해주세요.',INVALID_BIRTH_TIME:'출생 시간을 확인해주세요.'};submit.disabled=false;submit.textContent='다시 시도';showToast(messages[code]||'저장하지 못했어요. 다시 시도해주세요.');return}
+    if(error||!data?.ok){const code=await functionErrorCode(data,error,'SUBMISSION_FAILED');const messages={DUPLICATE_PARTICIPATION:'이미 이 링크에 참여한 정보예요.',INVITE_INVALID:'초대가 종료되었거나 만료됐어요.',INVALID_TOKEN:'초대 링크를 확인해주세요.',INVALID_NICKNAME:'닉네임을 확인해주세요.',INVALID_BIRTH_DATE:'생년월일을 확인해주세요.',INVALID_BIRTH_TIME:'출생 시간을 확인해주세요.',INVALID_GENDER:'성별을 확인해주세요.',CONSENT_REQUIRED:'개인정보 이용 동의가 필요해요.'};submit.disabled=false;submit.textContent='다시 시도';showToast(messages[code]||'저장하지 못했어요. 다시 시도해주세요.');return}
     form.dataset.castMemberId=data.castMemberId;await localSubmit?.call(form,event);showToast('친구의 Board에 안전하게 참여했어요');
   };
 }

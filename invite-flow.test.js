@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 const app = readFileSync(new URL('./app.js', import.meta.url), 'utf8');
+const inviteClient = readFileSync(new URL('./invite-integration.js', import.meta.url), 'utf8');
 const schema = readFileSync(
   new URL('./supabase/migrations/20260815024000_initial_reelation_schema.sql', import.meta.url),
   'utf8',
@@ -24,9 +25,17 @@ test('ordinary client inserts cannot forge INVITE cast members', () => {
   assert.match(schema, /casts_owner_insert[\s\S]*source_type='MANUAL'/);
 });
 
-test('current client does not yet implement token lookup or invite submission', () => {
-  assert.doesNotMatch(app, /supabase\.(from|rpc)\(/);
-  assert.doesNotMatch(app, /\/invite\/:token/);
+test('invite client resolves opaque tokens and submits through server functions', () => {
+  assert.match(inviteClient, /functions\.invoke\('resolve-invite'/);
+  assert.match(inviteClient, /functions\.invoke\('submit-invite'/);
+  assert.match(inviteClient, /\^\\\/reel\\\/\(\[A-Za-z0-9_-\]\{40,128\}\)/);
+});
+
+test('invite client maps server rejection codes to safe user-facing states', () => {
+  for (const code of ['INVALID_TOKEN','INVITE_NOT_FOUND','INVITE_DISABLED','INVITE_EXPIRED','DUPLICATE_PARTICIPATION','INVALID_BIRTH_DATE','INVALID_BIRTH_TIME']) {
+    assert.match(inviteClient, new RegExp(code));
+  }
+  assert.match(inviteClient, /error\?\.context\?\.clone\?\.\(\)\.json/);
 });
 
 // These are intentionally visible as TODO until a real token-backed server flow exists.
