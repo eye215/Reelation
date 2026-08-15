@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   analyze, calculateScores, calculateGenreScores, determineGlobalRole,
   determineRelationshipGenre, classifyCastTier, ranks, CAST_TIERS, LIFE_ROLES,
-  RELATIONSHIP_GENRES, RELATIONSHIP_CATEGORIES,
+  RELATIONSHIP_GENRES, RELATIONSHIP_CATEGORIES, calculateSaju,
 } from './engine.js';
 
 const owner={birthDate:'1996-08-15',birthTime:'10:30',gender:'FEMALE',calendarType:'SOLAR'};
@@ -21,3 +21,4 @@ test('ranking uses raw float then displays rounded integer',()=>{const make=(id,
 test('classification types stay distinct',()=>{assert.deepEqual(CAST_TIERS,['MAIN','SUPPORTING','FEATURED','CAMEO']);assert.equal(RELATIONSHIP_CATEGORIES.length,4);assert.equal(RELATIONSHIP_GENRES.length,9);assert.equal(new Set([...CAST_TIERS,...LIFE_ROLES,...RELATIONSHIP_GENRES,...RELATIONSHIP_CATEGORIES]).size,CAST_TIERS.length+LIFE_ROLES.length+RELATIONSHIP_GENRES.length+RELATIONSHIP_CATEGORIES.length)});
 test('cameo is a high-impact low-longevity pattern, not the bottom rank',()=>{const s={overall:82,impact:95,longevity:34,attraction:80,stability:45,growth:70,cooperation:50,conflict:65};assert.equal(classifyCastTier(s,1,10),'CAMEO')});
 test('relationship genre is independent from category',()=>{const s={overall:80,impact:88,longevity:55,attraction:84,stability:48,growth:65,cooperation:50,conflict:82};assert.equal(determineRelationshipGenre(s),'PSYCHOLOGICAL_THRILLER')});
+test('saju profile exposes a deterministic 60-day-pillar character key',()=>{const a=calculateSaju(cast),b=calculateSaju(cast);assert.equal(a.dayPillarIndex,b.dayPillarIndex);assert.ok(a.dayPillarIndex>=0&&a.dayPillarIndex<60);assert.equal(a.dayStemIndex,a.dayPillarIndex%10);assert.equal(a.dayBranchIndex,a.dayPillarIndex%12)});
