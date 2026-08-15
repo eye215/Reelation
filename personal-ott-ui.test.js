@@ -11,7 +11,7 @@ test('personal OTT visual layer is mounted after legacy styles',()=>{
   assert.match(html,/personal-ott\.css\?v=final-ia-76/);
   assert.ok(html.indexOf('personal-ott.css')>html.indexOf('ott-ui.css'));
   assert.match(html,/bootstrap\.js\?v=final-ia-76/);
-  assert.match(bootstrap,/app\.js\?v=final-ia-75/);
+  assert.match(bootstrap,/app\.js\?v=final-ia-76/);
 });
 
 test('home and visitor experiences lead with full visual movie heroes',()=>{
