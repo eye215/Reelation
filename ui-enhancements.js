@@ -25,7 +25,7 @@ function enhanceNavigation(){
 function enhanceMovieHome(){
   if(location.pathname!=='/board'&&location.pathname!=='/')return;
   const state=readState(),page=document.querySelector('.reel-page');
-  if(!state||!page||page.querySelector('.movie-home-feed'))return;
+  if(!state||!page||page.classList.contains('owner-main')||page.querySelector('.movie-home-feed'))return;
   page.querySelectorAll('.relation-board-head,.relation-self,.relationship-overview,.relationship-clusters').forEach(el=>el.remove());
   const ordered=[...state.cast].sort((a,b)=>Number(b.createdAt||0)-Number(a.createdAt||0));
   const latest=ordered[0];
@@ -48,6 +48,13 @@ function enhanceMovieHome(){
     ${castPreview.length?`<section class="home-cast-preview"><header><div><span>CAST</span><h2>내 등장인물</h2></div><button onclick="location.href='/cast'">전체 보기 →</button></header><div>${castPreview.map(person=>`<article onclick="location.href='/cast/${person.id}'"><img src="${imageFor(person)}" alt="${person.nickname}"><b>${person.nickname}</b><small>${ROLE_KO[person.analysis.lifeRole]||'관계 캐릭터'}</small></article>`).join('')}</div></section>`:''}
     ${commonRole?`<article class="home-director-note"><span>DIRECTOR’S NOTE</span><b>요즘 내 영화에는 ‘${commonRole[0]}’ 역할이 가장 많이 보여요.</b><p>${commonRole[1]}명의 인물이 비슷한 방식으로 다음 장면에 영향을 주고 있어요.</p></article>`:''}
   </section>`);
+}
+
+function enhanceVisitorMain(){
+  const page=document.querySelector('.visitor-page'),join=page?.querySelector('.visitor-join'),firstPublicSection=page?.querySelector('.visitor-section');
+  if(!page||!join||!firstPublicSection||join.dataset.iaReady)return;
+  join.dataset.iaReady='true';
+  firstPublicSection.before(join);
 }
 
 function enhanceRelationshipStory(){
@@ -187,7 +194,7 @@ function enhanceRelationshipStats(){
   });
 }
 
-const enhance=()=>{enhanceRouteSurface();enhanceNavigation();enhanceMovieHome();enhanceRelationshipStory();enhanceRelationshipStats();enhanceRankLabels();enhanceScoreLabels();enhanceNarrative()};
+const enhance=()=>{enhanceRouteSurface();enhanceNavigation();enhanceMovieHome();enhanceVisitorMain();enhanceRelationshipStory();enhanceRelationshipStats();enhanceRankLabels();enhanceScoreLabels();enhanceNarrative()};
 const observer=new MutationObserver(enhance);
 observer.observe(document.querySelector('#app'),{childList:true,subtree:true});
 enhance();
