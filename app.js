@@ -11,8 +11,8 @@ const sample=[['서윤','1997-04-18','08:20','FEMALE','MANUAL'],['민재','1995-
 const owner={id:'owner-demo',nickname:'유리',birthDate:'1996-08-15',birthTime:'10:30',gender:'FEMALE'};
 function seed(){return sample.map((x,i)=>{const c={id:'c'+(i+1),nickname:x[0],birthDate:x[1],birthTime:x[2],gender:x[3],sourceType:x[4],createdAt:i+1};c.analysis=analyze(owner,c);return c})}
 const routePublicId=getPublicId(location.pathname);
-let state=JSON.parse(localStorage.getItem('reelation-state')||'null')||{onboarded:true,owner,cast:seed(),invite:true,authUserId:routePublicId?null:owner.id,board:{ownerId:owner.id,publicId:routePublicId||'reel_yuri_demo'}};
-state.owner.id ||= owner.id;state.board ||= {ownerId:state.owner.id,publicId:state.inviteToken||routePublicId||'reel_yuri_demo'};state.inviteToken=state.board.publicId;if(!('authUserId' in state))state.authUserId=routePublicId?null:state.owner.id;localStorage.setItem('reelation-state',JSON.stringify(state));
+let state=JSON.parse(localStorage.getItem('reelation-state')||'null')||{onboarded:true,owner,cast:seed(),invite:true,authUserId:null,board:{ownerId:owner.id,publicId:routePublicId||'reel_yuri_demo'}};
+state.owner.id ||= owner.id;state.board ||= {ownerId:state.owner.id,publicId:state.inviteToken||routePublicId||'reel_yuri_demo'};state.inviteToken=state.board.publicId;state.authUserId=window.__REELATION_AUTH_USER_ID__||null;localStorage.setItem('reelation-state',JSON.stringify(state));
 const save=()=>localStorage.setItem('reelation-state',JSON.stringify(state));
 if(state.cast.some(c=>c.analysis?.sajuEngineVersion!=='saju-v2-gregorian')){state.cast.forEach(c=>c.analysis=analyze(state.owner,c));save()}
 const displayScore=value=>Math.round(Number(value));
