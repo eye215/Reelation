@@ -1,0 +1,11 @@
+import test from 'node:test';import assert from 'node:assert/strict';import{analyze,calculateScores,calculateGenreScores,determineGlobalRole,ranks}from'./engine.js';
+const owner={birthDate:'1996-08-15',birthTime:'10:30',gender:'FEMALE',calendarType:'SOLAR'},cast={birthDate:'1995-11-02',birthTime:'unknown',gender:'MALE',calendarType:'SOLAR'};
+const f=(dm,code)=>({dayMasterRelation:dm,interactions:[{code,weight:1.3}],featureCodes:[code]});
+test('same input -> same result',()=>assert.deepEqual(analyze(owner,cast),analyze(owner,cast)));
+test('all scores are 0..100',()=>{const a=analyze(owner,cast);Object.values(a.scores).forEach(n=>assert.ok(n>=0&&n<=100));Object.values(a.genres).forEach(x=>assert.ok(x.score>=0&&x.score<=100))});
+test('unknown birth time remains calculable',()=>assert.equal(analyze(owner,cast).confidence,'STANDARD'));
+test('harmony and clash modifiers differ correctly',()=>{const h=calculateScores(f('NEUTRAL','SIX_HARMONY')),c=calculateScores(f('NEUTRAL','CLASH'));assert.ok(h.stability>c.stability);assert.ok(c.conflict>h.conflict);assert.ok(c.impact>h.impact)});
+test('attraction high and conflict high can coexist',()=>{const x={dayMasterRelation:'CONTROLLED_BY_OTHER',interactions:Array(5).fill({code:'CLASH',weight:1.3}),featureCodes:[]},s=calculateScores(x);assert.ok(s.attraction>=75);assert.ok(s.conflict>=75);assert.ok(s.overall>0)});
+test('genre formula preserves raw floats',()=>{const s={attraction:80.5,stability:70.2,longevity:60.1,impact:90.4,growth:75.8,cooperation:66.6,conflict:50,overall:0},g=calculateGenreScores(s);assert.equal(g.romance.score,s.attraction*.35+s.stability*.2+s.longevity*.2+s.impact*.15+s.growth*.1)});
+test('role eligibility and competition work',()=>{const s={attraction:90,stability:65,impact:90,growth:75,longevity:70,cooperation:55,conflict:85,overall:70},r=determineGlobalRole(s,{romance:{score:85}});assert.ok(['DANGEROUS_SECOND_LEAD','RIVAL','SCENE_STEALER','FINAL_BOSS'].includes(r))});
+test('ranking uses raw float then displays rounded integer',()=>{const make=(id,n,t)=>({id,createdAt:t,analysis:{scores:{overall:n},genres:{}}}),r=ranks([make('b',88.21,1),make('a',88.44,2)],'overall');assert.deepEqual(r.map(x=>x.id),['a','b']);assert.deepEqual(r.map(x=>x.rankScore),[88,88])});
