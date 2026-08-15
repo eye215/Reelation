@@ -4,7 +4,7 @@ document.documentElement.dataset.auth='anonymous';
 
 import('./app.js?v=owner-entry-53').then(async()=>{
  try{
-  const{getVerifiedUser,supabase}=await import('./supabase-client.js?v=auth-fallback-46');
+  const{getVerifiedUser,supabase}=await import('./supabase-client.js?v=auth-singleton-57');
   window.__REELATION_SUPABASE__=supabase;
   const timeout=new Promise(resolve=>setTimeout(()=>resolve(null),3000));
   let user=await Promise.race([getVerifiedUser().catch(()=>null),timeout]);
