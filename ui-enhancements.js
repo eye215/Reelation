@@ -19,7 +19,7 @@ const relationKeyword=person=>{const s=person.analysis.scores;return s.growth>=7
 
 function enhanceNavigation(){
   const labels=[['/board','BOARD'],['/cast','CAST'],['/ranking','RANKING'],['/settings','MY']];
-  document.querySelectorAll('.bottomnav .navitem').forEach(button=>{const target=labels.find(([path])=>button.dataset.go===path);if(target){const icon=button.querySelector('i')?.outerHTML||'';button.innerHTML=`${icon}${target[1]}`}});
+  document.querySelectorAll('.bottomnav .navitem').forEach(button=>{if(button.dataset.navEnhanced)return;const target=labels.find(([path])=>button.dataset.go===path);if(target){const icon=button.querySelector('i')?.outerHTML||'';button.dataset.navEnhanced='true';button.innerHTML=`${icon}${target[1]}`}});
 }
 
 function enhanceMovieHome(){
