@@ -7,9 +7,9 @@ if(recoveredPath&&location.pathname==='/'){
 window.__REELATION_AUTH_USER_ID__=null;
 document.documentElement.dataset.auth='anonymous';
 
-import('./app.js?v=personal-ott-72').then(async()=>{
+import('./app.js?v=magic-link-73').then(async()=>{
  try{
-  const{getVerifiedUser,supabase}=await import('./supabase-client.js?v=auth-provider-69');
+  const{getVerifiedUser,supabase}=await import('./supabase-client.js?v=magic-link-72');
   window.__REELATION_SUPABASE__=supabase;
   const timeout=new Promise(resolve=>setTimeout(()=>resolve(null),3000));
   let user=await Promise.race([getVerifiedUser().catch(()=>null),timeout]);

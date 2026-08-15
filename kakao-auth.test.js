@@ -9,21 +9,26 @@ const session=fs.readFileSync('auth-session.js','utf8');
 const ownerSync=fs.readFileSync('owner-sync.js','utf8');
 const migration=fs.readFileSync('supabase/migrations/20260816103000_add_kakao_auth_layer.sql','utf8');
 
-test('owner onboarding requires Kakao OAuth before birth submission',()=>{
-  assert.match(client,/signInWithOAuth\(\{provider:'kakao'/);
-  assert.match(app,/signInWithKakao/);
+test('owner onboarding requires email magic-link auth before birth submission',()=>{
+  assert.match(client,/signInWithOtp/);
+  assert.match(client,/shouldCreateUser:true/);
+  assert.match(client,/emailRedirectTo/);
+  assert.match(app,/signInWithMagicLink/);
   assert.match(app,/p_birth_date/);
   assert.match(app,/state\.authUserId\?startPage\(\):loginGate\(\)/);
 });
-test('Kakao provider availability is checked and shared across owner and invite flows',()=>{
-  assert.match(client,/\/auth\/v1\/settings/);
-  assert.match(client,/KAKAO_PROVIDER_DISABLED/);
-  assert.match(invite,/signInWithKakao/);
+test('invite participation uses the same email magic-link identity',()=>{
+  assert.match(invite,/signInWithMagicLink/);
   assert.doesNotMatch(invite,/signInWithOAuth/);
+});
+test('Kakao is an optional linked identity instead of the primary account',()=>{
+  assert.match(client,/linkIdentity\(\{provider:'kakao'/);
+  assert.match(session,/data-link-kakao/);
+  assert.doesNotMatch(client,/signInWithOAuth/);
 });
 test('every browser module imports the same Supabase singleton URL',()=>{
   for(const source of [app,invite,bootstrap,session,ownerSync])assert.doesNotMatch(source,/supabase-client\.js\?v=auth-singleton-57/);
-  for(const source of [app,invite,bootstrap,session,ownerSync])assert.match(source,/supabase-client\.js\?v=auth-provider-69/);
+  for(const source of [app,invite,bootstrap,session,ownerSync])assert.match(source,/supabase-client\.js\?v=magic-link-72/);
 });
 test('Kakao identity creates a public profile without duplicating provider ids',()=>{
   assert.match(migration,/handle_new_auth_user/);

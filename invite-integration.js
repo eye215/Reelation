@@ -1,4 +1,4 @@
-import{supabase,getVerifiedUser,signInWithKakao}from'./supabase-client.js?v=auth-provider-69';
+import{supabase,getVerifiedUser,signInWithMagicLink}from'./supabase-client.js?v=magic-link-72';
 
 const app=document.querySelector('#app');
 const tokenFromPath=()=>location.pathname.match(/^\/reel\/([A-Za-z0-9_-]{40,128})\/?$/)?.[1]||null;
@@ -11,8 +11,8 @@ function showOwnerLogin(card,status,copy){
   if(card.querySelector('.owner-login'))return;
   copy.disabled=true;
   const panel=document.createElement('div');panel.className='owner-login';
-  panel.innerHTML='<strong>내 초대 링크를 만들려면 로그인해주세요.</strong><p>카카오 계정으로 영화 소유권과 출연진 관리를 안전하게 연결해요.</p><button type="button">카카오로 계속하기</button>';
-  panel.querySelector('button').onclick=async()=>{const{error,code}=await signInWithKakao('/invite');if(code==='KAKAO_PROVIDER_DISABLED')status.textContent='카카오 로그인을 연결 중이에요. 잠시 후 다시 시도해주세요.';else if(error)status.textContent='카카오 로그인을 시작하지 못했어요.'};
+  panel.innerHTML='<strong>내 초대 링크를 만들려면 로그인해주세요.</strong><p>이메일로 받은 링크를 눌러 영화 소유권과 출연진 관리를 연결해요.</p><input type="email" inputmode="email" autocomplete="email" placeholder="name@example.com" aria-label="로그인 이메일" required><button type="button">이메일로 로그인 링크 받기</button>';
+  panel.querySelector('button').onclick=async()=>{const{error,code}=await signInWithMagicLink(panel.querySelector('input').value,'/invite');if(code==='INVALID_EMAIL')status.textContent='이메일 주소를 정확히 입력해주세요.';else if(error)status.textContent='로그인 링크를 보내지 못했어요.';else status.textContent='메일을 보냈어요. 받은 편지함의 링크를 눌러주세요.'};
   card.append(panel);
 }
 
@@ -61,15 +61,17 @@ function connectGuestSubmission(){
     event.preventDefault();
     const user=await getVerifiedUser();
     if(!user){
-      const{error,code}=await signInWithKakao(location.pathname+'#visitorJoin');
-      if(code==='KAKAO_PROVIDER_DISABLED')showToast('카카오 로그인 연결 준비 중이에요.');
-      else if(error)showToast('카카오 로그인을 시작하지 못했어요. 다시 시도해주세요.');
+      const email=window.prompt('로그인 링크를 받을 이메일을 입력해주세요.');if(!email)return;
+      const{error,code}=await signInWithMagicLink(email,location.pathname+'#visitorJoin');
+      if(code==='INVALID_EMAIL')showToast('이메일 주소를 정확히 입력해주세요.');
+      else if(error)showToast('로그인 링크를 보내지 못했어요. 다시 시도해주세요.');
+      else showToast('이메일로 로그인 링크를 보냈어요.');
       return;
     }
     const fields=new FormData(form),unknown=document.querySelector('#visitorUnknown')?.checked;
     const submit=form.querySelector('button[type="submit"]');submit.disabled=true;submit.textContent='관계를 연결하는 중…';
     const{data,error}=await supabase.functions.invoke('submit-invite-auth',{body:{token,nickname:fields.get('nickname'),birthDate:fields.get('birthDate'),birthTime:unknown?null:fields.get('birthTime'),birthTimeKnown:!unknown,gender:fields.get('gender'),consentVersion:'invite-v1'}});
-    if(error||!data?.ok){const code=await functionErrorCode(data,error,'SUBMISSION_FAILED');const messages={AUTH_REQUIRED:'참여하려면 카카오 로그인이 필요해요.',DUPLICATE_PARTICIPATION:'이미 참여했어요. 기존 캐릭터를 확인해주세요.',INVITE_INVALID:'초대가 종료되었거나 만료됐어요.',INVALID_TOKEN:'초대 링크를 확인해주세요.',INVALID_NICKNAME:'닉네임을 확인해주세요.',INVALID_BIRTH_DATE:'생년월일을 확인해주세요.',INVALID_BIRTH_TIME:'출생 시간을 확인해주세요.',INVALID_GENDER:'성별을 확인해주세요.',CONSENT_REQUIRED:'개인정보 이용 동의가 필요해요.'};submit.disabled=false;submit.textContent='다시 시도';showToast(messages[code]||'저장하지 못했어요. 다시 시도해주세요.');return}
+    if(error||!data?.ok){const code=await functionErrorCode(data,error,'SUBMISSION_FAILED');const messages={AUTH_REQUIRED:'참여하려면 이메일 로그인이 필요해요.',DUPLICATE_PARTICIPATION:'이미 참여했어요. 기존 캐릭터를 확인해주세요.',INVITE_INVALID:'초대가 종료되었거나 만료됐어요.',INVALID_TOKEN:'초대 링크를 확인해주세요.',INVALID_NICKNAME:'닉네임을 확인해주세요.',INVALID_BIRTH_DATE:'생년월일을 확인해주세요.',INVALID_BIRTH_TIME:'출생 시간을 확인해주세요.',INVALID_GENDER:'성별을 확인해주세요.',CONSENT_REQUIRED:'개인정보 이용 동의가 필요해요.'};submit.disabled=false;submit.textContent='다시 시도';showToast(messages[code]||'저장하지 못했어요. 다시 시도해주세요.');return}
     form.dataset.castMemberId=data.castMemberId;await localSubmit?.call(form,event);showToast('친구의 Board에 안전하게 참여했어요');
   };
 }

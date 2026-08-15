@@ -1,4 +1,4 @@
-import { supabase, getVerifiedUser } from './supabase-client.js?v=auth-provider-69';
+import { supabase, getVerifiedUser } from './supabase-client.js?v=magic-link-72';
 
 const app = document.querySelector('#app');
 let syncing = false;
