@@ -8,10 +8,6 @@ try{
   window.__REELATION_SUPABASE__=supabase;
   const timeout=new Promise(resolve=>setTimeout(()=>resolve(null),3000));
   let user=await Promise.race([getVerifiedUser().catch(()=>null),timeout]);
-  if(!user&&location.pathname==='/invite'){
-    const{data}=await supabase.auth.signInAnonymously();
-    user=data?.user||null;
-  }
   window.__REELATION_AUTH_USER_ID__=user?.id||null;
   document.documentElement.dataset.auth=user?'authenticated':'anonymous';
   let board=null;
