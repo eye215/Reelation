@@ -5,10 +5,12 @@ import fs from 'node:fs';
 const app=fs.readFileSync('app.js','utf8');
 const css=fs.readFileSync('personal-ott.css','utf8');
 const html=fs.readFileSync('index.html','utf8');
+const bootstrap=fs.readFileSync('bootstrap.js','utf8');
 
 test('personal OTT visual layer is mounted after legacy styles',()=>{
   assert.match(html,/personal-ott\.css\?v=personal-ott-72/);
   assert.ok(html.indexOf('personal-ott.css')>html.indexOf('ott-ui.css'));
+  assert.match(bootstrap,/app\.js\?v=personal-ott-72/);
 });
 
 test('home and visitor experiences lead with full visual movie heroes',()=>{

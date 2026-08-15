@@ -7,7 +7,7 @@ if(recoveredPath&&location.pathname==='/'){
 window.__REELATION_AUTH_USER_ID__=null;
 document.documentElement.dataset.auth='anonymous';
 
-import('./app.js?v=ott-detail-66').then(async()=>{
+import('./app.js?v=personal-ott-72').then(async()=>{
  try{
   const{getVerifiedUser,supabase}=await import('./supabase-client.js?v=auth-provider-69');
   window.__REELATION_SUPABASE__=supabase;
