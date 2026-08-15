@@ -12,7 +12,7 @@ const save=()=>localStorage.setItem('reelation-state',JSON.stringify(state));
 if(state.cast.some(c=>c.analysis?.scoringVersion!=='reelation-v2')){state.cast.forEach(c=>c.analysis=analyze(state.owner,c));save()}
 const displayScore=value=>Math.round(Number(value));
 const characterMeta=c=>c.analysis?.character||(()=>{const s=calculateSaju({...c,birthTimeKnown:c.birthTime!=='unknown'});return{dayPillarIndex:s.dayPillarIndex,stemIndex:s.dayStemIndex,branchIndex:s.dayBranchIndex}})();
-const art=c=>{const x=characterMeta(c),gender=c.gender==='MALE'?'male':'female';return`<div class="cast-art stem-${x.stemIndex} gender-${gender} branch-${x.branchIndex}" data-day-pillar="${x.dayPillarIndex}" data-gender="${gender}" aria-hidden="true"></div>`};
+const art=c=>{const x=characterMeta(c),gender=c.gender==='MALE'?'male':'female',element=['wood','wood','fire','fire','earth','earth','metal','metal','water','water'][x.stemIndex],polarity=x.stemIndex%2?'yin':'yang';return`<div class="cast-art element-${element} polarity-${polarity} gender-${gender} branch-${x.branchIndex}" data-day-pillar="${x.dayPillarIndex}" data-stem="${x.stemIndex}" data-gender="${gender}" aria-hidden="true"></div>`};
 function go(path){history.pushState({},'',path);render();scrollTo(0,0)} window.onpopstate=render;
 function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),1800)}
 const role=r=>roleKo[r]||r.replaceAll('_',' ');
