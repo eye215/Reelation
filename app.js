@@ -42,9 +42,9 @@ function board(){
     <section class="owner-movie-hero">
       <div class="owner-movie-copy"><span class="owner-kicker">REELATION ORIGINAL</span><h1>끝나지 않은<br>성장의 장면</h1><p class="owner-genre">2026 · 성장 드라마 · 판타지</p></div>
       <div class="owner-character-still">${art(state.owner)}<span>CHARACTER POSTER</span></div>
-      <div class="owner-character-copy"><small>나는 이 영화에서 어떤 사람일까?</small><h2>판을 바꾸는 도전자</h2><p>사람과 사건을 거치며 자기만의 세계를 계속 확장하는 타입.</p><blockquote>“예상된 길보다 새로운 장면을 선택하는 사람”</blockquote></div>
       <div class="owner-hero-actions"><button data-scroll="#mainCharacter">▶ 내 영화 보기</button><button data-scroll="#castShelf">출연진 보기</button><button data-scroll="#topCast">영향도 보기</button></div>
     </section>
+    <section class="owner-character-copy"><small>나는 이 영화에서 어떤 사람일까?</small><h2>판을 바꾸는 도전자</h2><p>사람과 사건을 거치며 자기만의 세계를 계속 확장하는 타입.</p><blockquote>“예상된 길보다 새로운 장면을 선택하는 사람”</blockquote></section>
     <section class="owner-movie-about"><span>ABOUT THIS MOVIE</span><dl><div><dt>Genre</dt><dd>성장 드라마 · 판타지</dd></div><div><dt>Synopsis</dt><dd>끊임없이 변화하며 자신만의 방향을 만들어가는 한 사람의 성장 영화</dd></div><div><dt>Character Arc</dt><dd>익숙한 장면을 벗어나 선택으로 자신의 세계를 확장한다.</dd></div></dl></section>
     <section class="owner-character-summary" id="mainCharacter"><span>MAIN CHARACTER</span><div><b>${state.owner.nickname}</b><p>판을 바꾸는 성장형 주인공 · 나의 인생 영화</p></div></section>
     <section class="owner-section owner-casting" id="castShelf"><header><div><span>CASTING BOARD</span><h2>내 영화의 출연진</h2></div><small>출연 비중이 낮을수록 정보는 더 간결하게</small></header><div class="owner-actions"><button data-go="/cast/new">+ 출연진 추가</button><button data-go="/invite">친구 초대</button></div><div class="casting-stage"><section class="cast-group cast-group--main-character"><h3>MAIN CHARACTER</h3><div><article class="casting-card main-character">${art(state.owner)}<span class="cast-tier">MAIN CHARACTER</span><div><b>${state.owner.nickname}</b><small>이 영화의 주인공</small></div></article></div></section>${castGroups}</div></section>
