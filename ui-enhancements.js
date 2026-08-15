@@ -9,6 +9,21 @@ const imageFor=person=>{
 };
 const readState=()=>{try{return JSON.parse(localStorage.getItem('reelation-state')||'null')}catch{return null}};
 const rankLabel=(rank,total)=>`${total}명 중 ${rank}위 <small>(상위 ${Math.ceil(rank/Math.max(total,1)*100)}%)</small>`;
+const withPoint=value=>`${Math.round(Number(value))}점`;
+
+function enhanceScoreLabels(){
+  document.querySelectorAll('.mega-score,.score-big,.stat>b,.visitor-rank-row>span').forEach(el=>{
+    const value=el.textContent.trim();
+    if(/^\d+$/.test(value))el.textContent=withPoint(value);
+  });
+  document.querySelectorAll('.visitor-cast-card>div>small').forEach(el=>{
+    const value=el.textContent.replace(/점/g,'').trim();
+    if(/^\d+$/.test(value))el.textContent=withPoint(value);
+  });
+  document.querySelectorAll('.archive-card>div>span').forEach(el=>{
+    el.innerHTML=el.innerHTML.replace(/(인생 영향도\s+)(\d+)(?!점)/,(_,label,score)=>`${label}${score}점`);
+  });
+}
 
 function enhanceRankLabels(){
   const state=readState();
@@ -68,7 +83,7 @@ function enhanceRelationshipStats(){
   });
 }
 
-const enhance=()=>{enhanceRouteSurface();enhanceRelationshipStats();enhanceRankLabels()};
+const enhance=()=>{enhanceRouteSurface();enhanceRelationshipStats();enhanceRankLabels();enhanceScoreLabels()};
 const observer=new MutationObserver(enhance);
 observer.observe(document.querySelector('#app'),{childList:true,subtree:true});
 enhance();
