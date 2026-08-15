@@ -1,4 +1,4 @@
-import{supabase,getVerifiedUser}from'./supabase-client.js?v=auth-singleton-57';
+import{supabase,getVerifiedUser,signInWithKakao}from'./supabase-client.js?v=auth-provider-69';
 
 const app=document.querySelector('#app');
 const tokenFromPath=()=>location.pathname.match(/^\/reel\/([A-Za-z0-9_-]{40,128})\/?$/)?.[1]||null;
@@ -12,7 +12,7 @@ function showOwnerLogin(card,status,copy){
   copy.disabled=true;
   const panel=document.createElement('div');panel.className='owner-login';
   panel.innerHTML='<strong>내 초대 링크를 만들려면 로그인해주세요.</strong><p>카카오 계정으로 영화 소유권과 출연진 관리를 안전하게 연결해요.</p><button type="button">카카오로 계속하기</button>';
-  panel.querySelector('button').onclick=async()=>{const{error}=await supabase.auth.signInWithOAuth({provider:'kakao',options:{redirectTo:`${location.origin}/invite`}});if(error)status.textContent='카카오 로그인을 시작하지 못했어요.'};
+  panel.querySelector('button').onclick=async()=>{const{error,code}=await signInWithKakao('/invite');if(code==='KAKAO_PROVIDER_DISABLED')status.textContent='카카오 로그인을 연결 중이에요. 잠시 후 다시 시도해주세요.';else if(error)status.textContent='카카오 로그인을 시작하지 못했어요.'};
   card.append(panel);
 }
 
@@ -61,9 +61,9 @@ function connectGuestSubmission(){
     event.preventDefault();
     const user=await getVerifiedUser();
     if(!user){
-      sessionStorage.setItem('reelation-login-return',location.pathname+'#visitorJoin');
-      const{error}=await supabase.auth.signInWithOAuth({provider:'kakao',options:{redirectTo:`${location.origin}${location.pathname}#visitorJoin`}});
-      if(error)showToast('카카오 로그인을 시작하지 못했어요. 다시 시도해주세요.');
+      const{error,code}=await signInWithKakao(location.pathname+'#visitorJoin');
+      if(code==='KAKAO_PROVIDER_DISABLED')showToast('카카오 로그인 연결 준비 중이에요.');
+      else if(error)showToast('카카오 로그인을 시작하지 못했어요. 다시 시도해주세요.');
       return;
     }
     const fields=new FormData(form),unknown=document.querySelector('#visitorUnknown')?.checked;
