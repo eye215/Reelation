@@ -19,8 +19,18 @@ test('invite participation requires a verified user at the API and transaction l
 
 test('analysis completion recalculates rankings using a server-only transaction',()=>{
   assert.match(analysis,/recalculate_board_rankings/);
+  assert.doesNotMatch(analysis,/overall_score:\s*Math\.round/);
+  assert.doesNotMatch(analysis,/score:\s*Math\.round\(category\.score\)/);
+  assert.match(analysis,/job\.status === 'DONE'/);
   assert.match(migration,/delete from public\.rankings where board_id=p_board_id/);
   assert.match(migration,/grant execute on function public\.recalculate_board_rankings\(uuid\) to service_role/);
+});
+
+test('invite analysis dispatch detects rejected responses and retries the deployed function name',()=>{
+  assert.match(submit,/response\.ok/);
+  assert.match(submit,/process-invite-analysis-v2/);
+  assert.match(submit,/process-invite-analysis'/);
+  assert.match(submit,/analysis dispatch exhausted/);
 });
 
 test('movie jobs are explicit, versioned, cached, and dispatched in the background',()=>{
