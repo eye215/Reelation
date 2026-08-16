@@ -52,6 +52,13 @@ test('invite client maps server rejection codes to safe user-facing states', () 
   assert.match(inviteClient, /error\?\.context\?\.clone\?\.\(\)\.json/);
 });
 
+test('cached invites are revalidated and disabled access is cleared', () => {
+  assert.doesNotMatch(inviteClient, /valid-invite'\)===token\)return/);
+  assert.match(inviteClient, /removeItem\('reelation-valid-invite'\)/);
+  assert.match(inviteClient, /reelation-invite-resolved/);
+  assert.match(app, /addEventListener\('reelation-invite-resolved'/);
+});
+
 // These are intentionally visible as TODO until a real token-backed server flow exists.
 // Converting one to a passing test requires exercising the deployed app and verifying DB rows.
 const normalCases = [
