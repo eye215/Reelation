@@ -48,15 +48,24 @@ async function resolveVisitorInvite(){
     const code=await functionErrorCode(data,error,'INVITE_NOT_FOUND');
     app.innerHTML=`<main class="server-invite-error"><span>Reelation.</span><h1>${errorCopy[code]||'초대 링크를 확인할 수 없어요.'}</h1><p>링크를 보낸 친구에게 새로운 초대 링크를 요청해주세요.</p><button onclick="location.href='/'">Reelation 둘러보기</button></main>`;return;
   }
-  app.innerHTML=`<main class="server-invite-entry"><header><span>Reelation.</span><small>친구의 영화에 초대받았어요</small></header><section><div class="invite-owner-dot">●</div><p>${data.ownerNickname}의 영화 · 현재 ${data.castCount}명 출연 중</p><h1>나는 이 사람의<br>이야기에서 누구일까?</h1><p class="entry-copy">생년월일을 입력하면 나의 Character Still과 두 사람의 관계 역할이 바로 나타나요.</p><button id="enterInvite">내 캐릭터 확인하기</button></section></main>`;
-  document.querySelector('#enterInvite').onclick=()=>{
-    const saved=JSON.parse(localStorage.getItem('reelation-state')||'null');if(saved){saved.board.publicId=token;saved.invite=true;saved.owner.nickname=data.ownerNickname;saved.cast=[];saved.authUserId=null;localStorage.setItem('reelation-state',JSON.stringify(saved))}sessionStorage.setItem('reelation-valid-invite',token);location.reload();
-  };
+  // A valid invite opens the owner's movie immediately. Authentication is
+  // intentionally deferred until the visitor presses the participation CTA.
+  const saved=JSON.parse(localStorage.getItem('reelation-state')||'null');
+  if(saved){
+    saved.board={...(saved.board||{}),publicId:token,id:data.boardId||saved.board?.id};
+    saved.invite=true;
+    saved.owner={...(saved.owner||{}),nickname:data.ownerNickname};
+    saved.cast=[];
+    localStorage.setItem('reelation-state',JSON.stringify(saved));
+  }
+  sessionStorage.setItem('reelation-valid-invite',token);
+  sessionStorage.setItem('reelation-invite-meta',JSON.stringify(data));
+  location.reload();
 }
 
 function connectGuestSubmission(){
   const token=tokenFromPath();if(!token||sessionStorage.getItem('reelation-valid-invite')!==token)return;
-  const form=document.querySelector('#visitorForm');if(!form||form.dataset.serverBound)return;
+  const form=document.querySelector('#visitorJoinForm, #visitorForm');if(!form||form.dataset.serverBound)return;
   form.dataset.serverBound='true';const localSubmit=form.onsubmit;
   form.onsubmit=async event=>{
     event.preventDefault();
@@ -66,11 +75,14 @@ function connectGuestSubmission(){
       const email=window.prompt('로그인 링크를 받을 이메일을 입력해주세요.');if(!email)return;const{error,code}=await signInWithMagicLink(email,location.pathname+'#visitorJoin');if(code==='INVALID_EMAIL')showToast('이메일 주소를 정확히 입력해주세요.');else if(error)showToast('로그인 링크를 보내지 못했어요. 다시 시도해주세요.');else showToast('이메일로 로그인 링크를 보냈어요.');
       return;
     }
-    const fields=new FormData(form),unknown=document.querySelector('#visitorUnknown')?.checked;
+    const fields=new FormData(form),unknown=(document.querySelector('#visitorJoinUnknown')||document.querySelector('#visitorUnknown'))?.checked;
     const submit=form.querySelector('button[type="submit"]');submit.disabled=true;submit.textContent='관계를 연결하는 중…';
     const{data,error}=await supabase.functions.invoke('submit-invite-auth',{body:{token,nickname:fields.get('nickname'),birthDate:fields.get('birthDate'),birthTime:unknown?null:fields.get('birthTime'),birthTimeKnown:!unknown,gender:fields.get('gender'),consentVersion:'invite-v1'}});
     if(error||!data?.ok){const code=await functionErrorCode(data,error,'SUBMISSION_FAILED');const messages={AUTH_REQUIRED:'참여하려면 이메일 로그인이 필요해요.',DUPLICATE_PARTICIPATION:'이미 참여했어요. 기존 캐릭터를 확인해주세요.',INVITE_INVALID:'초대가 종료되었거나 만료됐어요.',INVALID_TOKEN:'초대 링크를 확인해주세요.',INVALID_NICKNAME:'닉네임을 확인해주세요.',INVALID_BIRTH_DATE:'생년월일을 확인해주세요.',INVALID_BIRTH_TIME:'출생 시간을 확인해주세요.',INVALID_GENDER:'성별을 확인해주세요.',CONSENT_REQUIRED:'개인정보 이용 동의가 필요해요.'};submit.disabled=false;submit.textContent='다시 시도';showToast(messages[code]||'저장하지 못했어요. 다시 시도해주세요.');return}
-    form.dataset.castMemberId=data.castMemberId;await localSubmit?.call(form,event);showToast('친구의 Board에 안전하게 참여했어요');
+    form.dataset.castMemberId=data.castMemberId;
+    form.dataset.participationId=data.participationId;
+    await localSubmit?.call(form,event);
+    showToast('친구의 Board에 안전하게 참여했어요');
   };
 }
 
