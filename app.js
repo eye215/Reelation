@@ -1,6 +1,6 @@
 import {analyze,ranks,RELATIONSHIP_CATEGORIES,METRICS,classifyCastTier,calculateSaju} from './engine.js?v=saju-12';
 import {VIEW_MODE,getPublicId,resolveViewMode,toPublicBoard} from './view-mode.js?v=view-25';
-import {supabase,getVerifiedUser,signInWithMagicLink,signInWithKakao} from './supabase-client.js?v=auth-singleton-91';
+import {supabase,getVerifiedUser,signInWithMagicLink,signInWithKakao} from './supabase-client.js?v=auth-global-92';
 const $=s=>document.querySelector(s), app=$('#app');
 const roleKo={TURNING_POINT:'인생 전환점',LIFELONG_ALLY:'평생 조력자',GROWTH_CATALYST:'성장 촉진자',RIVAL:'라이벌',SCENE_STEALER:'씬스틸러',HIDDEN_HELPER:'숨은 조력자',LONG_TERM_PRESENCE:'오래 남는 사람',STRONG_IMPRINT:'강렬한 흔적',WILDCARD:'변수',FINAL_BOSS:'최종보스',SLOW_BURN:'천천히 타오르는 사랑',MAIN_LEAD:'주연',SECOND_LEAD:'서브 주연',END_CREDIT_FRIEND:'엔딩 크레딧 친구',LOYAL_ALLY:'든든한 동료',LONG_TERM_CAST:'오래 함께할 캐스트',SHORT_BUT_STRONG:'짧고 강렬한 인연',POWER_DUO:'파워 듀오',BEST_PARTNER:'최고의 파트너',GROWTH_PARTNER:'성장 파트너',CATALYST:'촉매',MENTOR_ENERGY:'멘토 에너지',AWAKENER:'각성자'};
 const tierKo={MAIN:'주연',SUPPORTING:'조연',FEATURED:'단역',CAMEO:'카메오'};
