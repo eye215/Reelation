@@ -42,7 +42,9 @@ async function connectOwnerInvite(){
 }
 
 async function resolveVisitorInvite(){
-  const token=tokenFromPath();if(!token||sessionStorage.getItem('reelation-valid-invite')===token)return;
+  const token=tokenFromPath();
+  let cachedMeta=null;try{cachedMeta=JSON.parse(sessionStorage.getItem('reelation-invite-meta')||'null')}catch{}
+  if(!token||(sessionStorage.getItem('reelation-valid-invite')===token&&cachedMeta?.inviteToken===token&&cachedMeta?.publicId))return;
   const{data,error}=await supabase.functions.invoke('resolve-invite',{body:{token}});
   if(error||!data?.valid){
     const code=await functionErrorCode(data,error,'INVITE_NOT_FOUND');
@@ -58,8 +60,14 @@ async function resolveVisitorInvite(){
     saved.cast=[];
     localStorage.setItem('reelation-state',JSON.stringify(saved));
   }
+  const publicId=data.publicId;
+  const[{data:reel},{data:cast}]=publicId?await Promise.all([
+    supabase.from('public_reels').select('public_id,owner_nickname,title,hero_image_key,cast_count,primary_genre,theme_key,character_type,tagline,poster_image_key').eq('public_id',publicId).maybeSingle(),
+    supabase.from('public_cast_entries').select('cast_member_public_id,nickname,influence_score,influence_rank,image_key').eq('public_id',publicId).order('influence_rank',{ascending:true}),
+  ]):[{data:null},{data:[]}];
+  const publicMeta={inviteToken:token,publicId,ownerNickname:reel?.owner_nickname||data.ownerNickname,title:reel?.title||data.title,heroImageKey:reel?.hero_image_key||null,posterImageKey:reel?.poster_image_key||null,castCount:reel?.cast_count??data.castCount??0,primaryGenre:reel?.primary_genre||null,themeKey:reel?.theme_key||null,characterType:reel?.character_type||null,tagline:reel?.tagline||null,cast:Array.isArray(cast)?cast:[]};
   sessionStorage.setItem('reelation-valid-invite',token);
-  sessionStorage.setItem('reelation-invite-meta',JSON.stringify(data));
+  sessionStorage.setItem('reelation-invite-meta',JSON.stringify(publicMeta));
   location.reload();
 }
 
