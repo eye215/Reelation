@@ -1,4 +1,4 @@
-import {supabase,getVerifiedUser} from './supabase-client.js?v=magic-link-72';
+import {supabase,getVerifiedUser} from './supabase-client.js?v=auth-singleton-91';
 
 const app=document.querySelector('#app');
 const statusCopy={DRAFT:'영화 제작 전',GENERATING:'포스터 제작 중',COMPLETED:'영화 공개 중',UPDATED:'새 출연진 반영됨',ARCHIVED:'보관됨'};
