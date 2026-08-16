@@ -44,9 +44,11 @@ async function connectOwnerInvite(){
 async function resolveVisitorInvite(){
   const token=tokenFromPath();
   let cachedMeta=null;try{cachedMeta=JSON.parse(sessionStorage.getItem('reelation-invite-meta')||'null')}catch{}
-  if(!token||(sessionStorage.getItem('reelation-valid-invite')===token&&cachedMeta?.inviteToken===token&&cachedMeta?.publicId))return;
+  if(!token)return;
   const{data,error}=await supabase.functions.invoke('resolve-invite',{body:{token}});
   if(error||!data?.valid){
+    sessionStorage.removeItem('reelation-valid-invite');
+    sessionStorage.removeItem('reelation-invite-meta');
     const code=await functionErrorCode(data,error,'INVITE_NOT_FOUND');
     app.innerHTML=`<main class="server-invite-error"><span>Reelation.</span><h1>${errorCopy[code]||'초대 링크를 확인할 수 없어요.'}</h1><p>링크를 보낸 친구에게 새로운 초대 링크를 요청해주세요.</p><button onclick="location.href='/'">Reelation 둘러보기</button></main>`;return;
   }
@@ -65,9 +67,10 @@ async function resolveVisitorInvite(){
     supabase.from('public_reels').select('public_id,owner_nickname,title,hero_image_key,cast_count,primary_genre,theme_key,character_type,tagline,poster_image_key').eq('public_id',publicId).maybeSingle(),
     supabase.from('public_cast_entries').select('cast_member_public_id,nickname,influence_score,influence_rank,image_key').eq('public_id',publicId).order('influence_rank',{ascending:true}),
   ]):[{data:null},{data:[]}];
-  const publicMeta={inviteToken:token,publicId,ownerNickname:reel?.owner_nickname||data.ownerNickname,title:reel?.title||data.title,heroImageKey:reel?.hero_image_key||null,posterImageKey:reel?.poster_image_key||null,castCount:reel?.cast_count??data.castCount??0,primaryGenre:reel?.primary_genre||null,themeKey:reel?.theme_key||null,characterType:reel?.character_type||null,tagline:reel?.tagline||null,cast:Array.isArray(cast)?cast:[]};
+  const publicMeta={inviteToken:token,publicId,ownerNickname:reel?.owner_nickname||data.ownerNickname,title:reel?.title||data.title,heroImageKey:reel?.hero_image_key||null,posterImageKey:reel?.poster_image_key||null,castCount:reel?.cast_count??data.castCount??0,primaryGenre:reel?.primary_genre||null,themeKey:reel?.theme_key||null,characterType:reel?.character_type||null,tagline:reel?.tagline||null,cast:Array.isArray(cast)?cast:[],validatedAt:Date.now()};
   sessionStorage.setItem('reelation-valid-invite',token);
   sessionStorage.setItem('reelation-invite-meta',JSON.stringify(publicMeta));
+  if(cachedMeta?.inviteToken===token&&cachedMeta?.publicId){window.dispatchEvent(new CustomEvent('reelation-invite-resolved',{detail:publicMeta}));return}
   location.reload();
 }
 
