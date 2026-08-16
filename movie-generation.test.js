@@ -53,3 +53,9 @@ test('dynamic share page emits OG metadata',()=>{
   assert.match(share,/og:image/);
   assert.match(share,/movie-posters/);
 });
+
+test('invite submission links the authenticated user to the submitted birth profile',()=>{
+  const linkMigration=read('supabase/migrations/20260816170000_link_invite_birth_profile_to_user.sql');
+  assert.match(linkMigration,/birth_profile_id=excluded\.birth_profile_id/);
+  assert.match(linkMigration,/source_type,birth_profile_id,status/);
+});
