@@ -31,6 +31,19 @@ test('invite client resolves opaque tokens and submits through server functions'
   assert.match(inviteClient, /\^\\\/reel\\\/\(\[A-Za-z0-9_-\]\{40,128\}\)/);
 });
 
+test('current visitor V2 form is bound to the authenticated server transaction', () => {
+  assert.match(app, /id="visitorJoinForm"/);
+  assert.match(inviteClient, /#visitorJoinForm, #visitorForm/);
+  assert.match(inviteClient, /#visitorJoinUnknown/);
+  assert.match(inviteClient, /data\.participationId/);
+});
+
+test('valid invite routes directly to the movie main before authentication', () => {
+  assert.match(inviteClient, /reelation-valid-invite/);
+  assert.match(inviteClient, /Authentication is[\s\S]*deferred/);
+  assert.doesNotMatch(inviteClient, /id="enterInvite"/);
+});
+
 test('invite client maps server rejection codes to safe user-facing states', () => {
   for (const code of ['INVALID_TOKEN','INVITE_NOT_FOUND','INVITE_DISABLED','INVITE_EXPIRED','DUPLICATE_PARTICIPATION','INVALID_BIRTH_DATE','INVALID_BIRTH_TIME']) {
     assert.match(inviteClient, new RegExp(code));
