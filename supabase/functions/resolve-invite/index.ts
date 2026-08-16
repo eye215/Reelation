@@ -15,5 +15,5 @@ Deno.serve(async req=>{
   if(!board||!board.invite_enabled)return json({error:'INVITE_DISABLED'},410);
   const{count}=await admin.from('cast_members').select('id',{count:'exact',head:true}).eq('board_id',board.id).eq('status','ACTIVE');
   const owner=Array.isArray(board.users)?board.users[0]:board.users;
-  return json({valid:true,publicId:board.public_id,ownerNickname:owner?.nickname||'주인공',title:board.title,castCount:count||0});
+  return json({valid:true,boardId:board.id,publicId:board.public_id,ownerNickname:owner?.nickname||'주인공',title:board.title,castCount:count||0});
 });
