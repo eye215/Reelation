@@ -3,9 +3,14 @@ import{createClient}from'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57
 const SUPABASE_URL='https://gnzcatibyrqbxxdnsdua.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY='sb_publishable_TOCoxThfi63_OhtodkhqAQ_qTlI8qty';
 
-export const supabase=createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{
-  auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true},
-});
+// Keep one GoTrue client even when cache-busted browser modules are evaluated
+// more than once. Multiple clients share the same storage key and can race
+// while restoring or refreshing a Kakao session.
+export const supabase=window.__REELATION_SUPABASE_CLIENT__||(
+  window.__REELATION_SUPABASE_CLIENT__=createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{
+    auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true},
+  })
+);
 
 export async function getVerifiedUser(){
   try{
