@@ -1,4 +1,4 @@
-import { supabase, getVerifiedUser } from './supabase-client.js?v=auth-global-92';
+import { supabase, getVerifiedUser } from './supabase-client.js?v=cdn-fallback-96';
 
 const app = document.querySelector('#app');
 let syncing = false;
