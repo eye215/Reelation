@@ -7,7 +7,7 @@ if(recoveredPath&&location.pathname==='/'){
 window.__REELATION_AUTH_USER_ID__=null;
 document.documentElement.dataset.auth='anonymous';
 
-import('./app.js?v=invite-server-id-93').then(async()=>{
+import('./app.js?v=public-projection-94').then(async()=>{
  try{
   const{getVerifiedUser,supabase}=await import('./supabase-client.js?v=auth-global-92');
   window.__REELATION_SUPABASE__=supabase;
