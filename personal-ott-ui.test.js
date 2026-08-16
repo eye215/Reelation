@@ -14,8 +14,8 @@ test('personal OTT visual layer is mounted after legacy styles',()=>{
   assert.ok(html.indexOf('reference-ott.css')>html.indexOf('personal-ott.css'));
   assert.match(html,/reelation-v2\.css\?v=session-restore-89/);
   assert.ok(html.indexOf('reelation-v2.css')>html.indexOf('reference-ott.css'));
-  assert.match(html,/bootstrap\.js\?v=auth-global-92/);
-  assert.match(bootstrap,/app\.js\?v=session-restore-89/);
+  assert.match(html,/bootstrap\.js\?v=invite-server-id-93/);
+  assert.match(bootstrap,/app\.js\?v=invite-server-id-93/);
 });
 
 test('movie description opens from the poster as an immersive modal',()=>{
