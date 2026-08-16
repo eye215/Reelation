@@ -1,4 +1,4 @@
-import{supabase,getVerifiedUser,signInWithMagicLink,signInWithKakao}from'./supabase-client.js?v=auth-singleton-91';
+import{supabase,getVerifiedUser,signInWithMagicLink,signInWithKakao}from'./supabase-client.js?v=auth-global-92';
 
 const app=document.querySelector('#app');
 const tokenFromPath=()=>location.pathname.match(/^\/reel\/([A-Za-z0-9_-]{40,128})\/?$/)?.[1]||null;
