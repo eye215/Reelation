@@ -21,6 +21,12 @@ Deno.serve(async req=>{
   const{data,error}=await admin.rpc('submit_authenticated_invite_participation',{p_participant_user_id:user.id,p_token_hash:tokenHash,p_submission_fingerprint:fingerprint,p_nickname:nickname,p_birth_date:birthDate,p_birth_time:birthTimeKnown?birthTime:null,p_birth_time_known:Boolean(birthTimeKnown),p_gender:gender,p_consent_version:consentVersion});
   if(error){const message=error.message||'';if(message.includes('DUPLICATE_PARTICIPATION'))return json({error:'DUPLICATE_PARTICIPATION'},409);if(message.includes('INVITE_INVALID'))return json({error:'INVITE_INVALID'},410);return json({error:'SUBMISSION_FAILED'},500)}
   const castMemberId=data?.[0]?.cast_member_id;
-  EdgeRuntime.waitUntil(fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/process-invite-analysis-v2`,{method:'POST',headers:{Authorization:`Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,'Content-Type':'application/json'},body:JSON.stringify({castMemberId})}).catch(error=>console.error('analysis dispatch failed',error)));
+  EdgeRuntime.waitUntil((async()=>{
+    const base=Deno.env.get('SUPABASE_URL')!,serviceKey=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,options={method:'POST',headers:{Authorization:`Bearer ${serviceKey}`,'Content-Type':'application/json'},body:JSON.stringify({castMemberId})};
+    for(const functionName of ['process-invite-analysis-v2','process-invite-analysis']){
+      try{const response=await fetch(`${base}/functions/v1/${functionName}`,options);if(response.ok)return;console.error('analysis dispatch rejected',functionName,response.status)}catch(error){console.error('analysis dispatch failed',functionName,error)}
+    }
+    console.error('analysis dispatch exhausted',castMemberId);
+  })());
   return json({ok:true,castMemberId,participationId:data?.[0]?.participation_id,analysisStatus:'PENDING'});
 });
