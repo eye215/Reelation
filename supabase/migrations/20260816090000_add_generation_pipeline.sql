@@ -103,7 +103,7 @@ begin
   values(p_birth_date,case when p_birth_time_known then p_birth_time else null end,p_birth_time_known,'SOLAR',p_gender) returning id into v_birth_id;
   insert into public.users(id,nickname,birth_profile_id)
   values(p_participant_user_id,trim(p_nickname),v_birth_id)
-  on conflict(id) do update set nickname=excluded.nickname,updated_at=now();
+  on conflict(id) do update set nickname=excluded.nickname,birth_profile_id=excluded.birth_profile_id,updated_at=now();
   insert into public.cast_members(board_id,linked_user_id,nickname,public_name,source_type,birth_profile_id,status)
   values(v_invite.board_id,p_participant_user_id,trim(p_nickname),trim(p_nickname),'INVITE',v_birth_id,'ACTIVE') returning id into v_cast_id;
   insert into public.invite_participations(invite_id,cast_member_id,participant_user_id,consent_version,consented_at,status,submission_fingerprint)
