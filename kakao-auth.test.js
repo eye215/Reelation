@@ -30,9 +30,13 @@ test('save choice offers Kakao OAuth and optional identity linking',()=>{
   assert.match(app,/카카오로 저장하기/);
 });
 test('every browser module imports the same Supabase singleton URL',()=>{
-  for(const source of [app,invite,bootstrap,session,ownerSync])assert.match(source,/supabase-client\.js\?v=auth-singleton-91/);
+  for(const source of [app,invite,bootstrap,session,ownerSync])assert.match(source,/supabase-client\.js\?v=auth-global-92/);
   const imports=[app,invite,bootstrap,session,ownerSync].flatMap(source=>source.match(/supabase-client\.js\?v=[A-Za-z0-9-]+/g)||[]);
-  assert.deepEqual(new Set(imports),new Set(['supabase-client.js?v=auth-singleton-91']));
+  assert.deepEqual(new Set(imports),new Set(['supabase-client.js?v=auth-global-92']));
+});
+test('Supabase client also has a global singleton guard',()=>{
+  assert.match(client,/window\.__REELATION_SUPABASE_CLIENT__/);
+  assert.match(client,/window\.__REELATION_SUPABASE_CLIENT__=createClient/);
 });
 test('Kakao identity creates a public profile without duplicating provider ids',()=>{
   assert.match(migration,/handle_new_auth_user/);
