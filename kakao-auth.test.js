@@ -30,9 +30,16 @@ test('save choice offers Kakao OAuth and optional identity linking',()=>{
   assert.match(app,/카카오로 저장하기/);
 });
 test('every browser module imports the same Supabase singleton URL',()=>{
-  for(const source of [app,invite,bootstrap,session,ownerSync])assert.match(source,/supabase-client\.js\?v=auth-global-92/);
+  for(const source of [app,invite,bootstrap,session,ownerSync])assert.match(source,/supabase-client\.js\?v=cdn-fallback-96/);
   const imports=[app,invite,bootstrap,session,ownerSync].flatMap(source=>source.match(/supabase-client\.js\?v=[A-Za-z0-9-]+/g)||[]);
-  assert.deepEqual(new Set(imports),new Set(['supabase-client.js?v=auth-global-92']));
+  assert.deepEqual(new Set(imports),new Set(['supabase-client.js?v=cdn-fallback-96']));
+});
+
+test('Supabase client falls back when the primary CDN is unavailable',()=>{
+  assert.match(client,/cdn\.jsdelivr\.net/);
+  assert.match(client,/esm\.sh/);
+  assert.match(client,/SUPABASE_CDN_TIMEOUT/);
+  assert.match(client,/Promise\.race/);
 });
 test('Supabase client also has a global singleton guard',()=>{
   assert.match(client,/window\.__REELATION_SUPABASE_CLIENT__/);
