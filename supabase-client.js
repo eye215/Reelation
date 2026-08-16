@@ -1,4 +1,20 @@
-import{createClient}from'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/+esm';
+async function loadSupabaseModule(){
+  const sources=[
+    'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/+esm',
+    'https://esm.sh/@supabase/supabase-js@2.57.4?bundle',
+  ];
+  let lastError;
+  for(const source of sources){
+    try{
+      const modulePromise=import(source);
+      const timeout=new Promise((_,reject)=>setTimeout(()=>reject(new Error('SUPABASE_CDN_TIMEOUT')),2500));
+      return await Promise.race([modulePromise,timeout]);
+    }catch(error){lastError=error}
+  }
+  throw lastError||new Error('SUPABASE_CLIENT_UNAVAILABLE');
+}
+
+const{createClient}=await loadSupabaseModule();
 
 const SUPABASE_URL='https://gnzcatibyrqbxxdnsdua.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY='sb_publishable_TOCoxThfi63_OhtodkhqAQ_qTlI8qty';
