@@ -36,6 +36,7 @@ test('current visitor V2 form is bound to the authenticated server transaction',
   assert.match(inviteClient, /#visitorJoinForm, #visitorForm/);
   assert.match(inviteClient, /#visitorJoinUnknown/);
   assert.match(inviteClient, /data\.participationId/);
+  assert.match(app, /e\.target\.dataset\.castMemberId\|\|'c'\+Date\.now\(\)/);
 });
 
 test('valid invite routes directly to the movie main before authentication', () => {
