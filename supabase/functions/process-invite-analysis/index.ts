@@ -18,6 +18,7 @@ Deno.serve(async (req) => {
   const admin = createClient(Deno.env.get('SUPABASE_URL')!, serviceKey);
   const { data: job } = await admin.from('analysis_jobs').select('*').eq('cast_member_id', castMemberId).maybeSingle();
   if (!job) return json({ error: 'JOB_NOT_FOUND' }, 404);
+  if (job.status === 'DONE') return json({ ok: true, status: 'DONE', cached: true });
   await admin.from('analysis_jobs').update({ status: 'PROCESSING', attempts: job.attempts + 1, updated_at: new Date().toISOString() }).eq('id', job.id);
 
   try {
@@ -49,15 +50,15 @@ Deno.serve(async (req) => {
     const s = result.scores;
     const { data: analysis, error: analysisError } = await admin.from('relationship_analyses').upsert({
       board_id: board.id, cast_member_id: cast.id, owner_saju_profile_id: ownerSajuId, cast_saju_profile_id: castSajuId,
-      scoring_version: result.scoringVersion, overall_score: Math.round(s.overall), attraction_score: Math.round(s.attraction), stability_score: Math.round(s.stability),
-      impact_score: Math.round(s.impact), growth_score: Math.round(s.growth), longevity_score: Math.round(s.longevity), cooperation_score: Math.round(s.cooperation), conflict_score: Math.round(s.conflict),
+      scoring_version: result.scoringVersion, overall_score: s.overall, attraction_score: s.attraction, stability_score: s.stability,
+      impact_score: s.impact, growth_score: s.growth, longevity_score: s.longevity, cooperation_score: s.cooperation, conflict_score: s.conflict,
       global_role: result.lifeRole, cast_tier: result.castTier, life_role: result.lifeRole, relationship_genre: result.relationshipGenre,
       confidence: result.confidence, feature_codes: result.featureCodes, status: 'NARRATIVE_PENDING', updated_at: new Date().toISOString(),
     }, { onConflict: 'board_id,cast_member_id,scoring_version' }).select('id').single();
     if (analysisError) throw analysisError;
     for (const genre of RELATIONSHIP_CATEGORIES) {
       const category = result.categoryResults[genre];
-      const { error } = await admin.from('genre_analyses').upsert({ relationship_analysis_id: analysis.id, genre: genre.toUpperCase(), score: Math.round(category.score), role: category.role }, { onConflict: 'relationship_analysis_id,genre' });
+      const { error } = await admin.from('genre_analyses').upsert({ relationship_analysis_id: analysis.id, genre: genre.toUpperCase(), score: category.score, role: category.role }, { onConflict: 'relationship_analysis_id,genre' });
       if (error) throw error;
     }
     const { error: rankingError } = await admin.rpc('recalculate_board_rankings', { p_board_id: board.id });
