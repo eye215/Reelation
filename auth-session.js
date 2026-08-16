@@ -1,4 +1,4 @@
-import{supabase,getVerifiedUser,linkKakaoIdentity}from'./supabase-client.js?v=auth-singleton-91';
+import{supabase,getVerifiedUser,linkKakaoIdentity}from'./supabase-client.js?v=auth-global-92';
 const app=document.querySelector('#app');
 async function decorateSession(){
   const settings=document.querySelector('.page .rank-card');if(!settings||settings.querySelector('.auth-session'))return;
