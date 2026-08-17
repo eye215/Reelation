@@ -16,8 +16,8 @@ async function loadSupabaseModule(){
 
 const{createClient}=await loadSupabaseModule();
 
-const SUPABASE_URL='https://gnzcatibyrqbxxdnsdua.supabase.co';
-const SUPABASE_PUBLISHABLE_KEY='sb_publishable_TOCoxThfi63_OhtodkhqAQ_qTlI8qty';
+export const SUPABASE_URL='https://gnzcatibyrqbxxdnsdua.supabase.co';
+export const SUPABASE_PUBLISHABLE_KEY='sb_publishable_TOCoxThfi63_OhtodkhqAQ_qTlI8qty';
 
 // Keep one GoTrue client even when cache-busted browser modules are evaluated
 // more than once. Multiple clients share the same storage key and can race
@@ -34,6 +34,17 @@ export async function getVerifiedUser(){
     if(error)return null;
     return data.user||null;
   }catch{return null}
+}
+
+// Public invite resolution deliberately omits Authorization. The deployed
+// resolver accepts only the publishable key, which keeps logged-in visitors
+// from triggering a CORS preflight with an unsupported auth header.
+export async function invokePublicFunction(name,body){
+  try{
+    const response=await fetch(`${SUPABASE_URL}/functions/v1/${name}`,{method:'POST',headers:{apikey:SUPABASE_PUBLISHABLE_KEY,'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const data=await response.json().catch(()=>null);
+    return response.ok?{data,error:null}:{data,error:{context:response,status:response.status}};
+  }catch(error){return{data:null,error}}
 }
 
 export async function signInWithMagicLink(email,returnPath=location.pathname){
