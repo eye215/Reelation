@@ -1,4 +1,4 @@
-import{supabase,getVerifiedUser,linkKakaoIdentity}from'./supabase-client.js?v=cdn-fallback-96';
+import{supabase,getVerifiedUser,linkKakaoIdentity}from'./supabase-client.js?v=public-invite-103';
 const app=document.querySelector('#app');
 const identityDismissKey=userId=>`reelation-kakao-link-dismissed:${userId}`;
 async function offerKakaoLink(user){
