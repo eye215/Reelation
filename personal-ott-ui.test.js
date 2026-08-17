@@ -14,8 +14,8 @@ test('personal OTT visual layer is mounted after legacy styles',()=>{
   assert.ok(html.indexOf('reference-ott.css')>html.indexOf('personal-ott.css'));
   assert.match(html,/reelation-v2\.css\?v=top-cast-100/);
   assert.ok(html.indexOf('reelation-v2.css')>html.indexOf('reference-ott.css'));
-  assert.match(html,/bootstrap\.js\?v=top-cast-100/);
-  assert.match(bootstrap,/app\.js\?v=top-cast-100/);
+  assert.match(html,/bootstrap\.js\?v=ia-invite-104/);
+  assert.match(bootstrap,/app\.js\?v=ia-invite-104/);
 });
 
 test('movie description opens from the poster as an immersive modal',()=>{
@@ -119,12 +119,23 @@ test('MY is an account and privacy hub instead of the legacy demo card',()=>{
 
 test('invite management supports copy, native share, privacy and server-facing status',()=>{
   const invite=app.slice(app.indexOf('function invite()'),app.indexOf('function settings()'));
+  const integration=fs.readFileSync(new URL('./invite-integration.js',import.meta.url),'utf8');
   assert.match(invite,/r16-invite-page/);
-  assert.match(invite,/navigator\.clipboard\.writeText/);
-  assert.match(invite,/navigator\.share/);
+  assert.match(integration,/navigator\.clipboard\.writeText/);
+  assert.match(integration,/navigator\.share/);
   assert.match(invite,/원본 정보는/);
-  assert.match(invite,/state\.invite=!state\.invite/);
+  assert.match(integration,/invite_enabled:true/);
   assert.match(html,/invite-page\.css\?v=invite-hub-102/);
+});
+
+test('birth inputs use year month day selects and support lunar dates',()=>{
+  const birth=fs.readFileSync(new URL('./birth-inputs.js',import.meta.url),'utf8');
+  assert.match(html,/birth-inputs\.js\?v=ia-invite-104/);
+  assert.match(birth,/data-birth-year/);
+  assert.match(birth,/data-birth-month/);
+  assert.match(birth,/data-birth-day/);
+  assert.match(birth,/value="LUNAR"/);
+  assert.match(birth,/lunarToSolar/);
 });
 
 test('new invite UI is connected to opaque server tokens and server-side disable',()=>{
