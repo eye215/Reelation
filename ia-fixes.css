@@ -1,0 +1,9 @@
+/* IA cleanup and shared birth-date controls. */
+.r9-actions{grid-template-columns:1.2fr 1fr}
+.r9-cast-tools{grid-template-columns:minmax(0,180px)}
+.birth-date-selects{display:grid;grid-template-columns:1.25fr .85fr .85fr;gap:7px;margin-top:7px}
+.birth-date-selects select,.birth-calendar-select{width:100%;min-width:0;height:48px;padding:0 12px;border:1px solid #3a3a40;border-radius:12px;background:#202024;color:#f7f7f8;font:inherit}
+.birth-date-selects select:focus,.birth-calendar-select:focus{outline:2px solid #ff4967;outline-offset:1px}
+.birth-calendar-wrap{display:block;margin-top:12px}
+.birth-calendar-wrap>span{display:block;margin-bottom:7px;color:#939398;font-size:11px;font-weight:700}
+@media(max-width:360px){.birth-date-selects{gap:5px}.birth-date-selects select{padding:0 7px}}
