@@ -21,6 +21,8 @@ const setInviteUrl=(urlBox,value)=>{
   const label=urlBox.querySelector('span');
   if(label)label.textContent=value;else urlBox.textContent=value;
 };
+const tokenFromUrl=value=>{try{return new URL(value,location.origin).pathname.match(/^\/reel\/([A-Za-z0-9_-]{40,128})\/?$/)?.[1]||null}catch{return null}};
+const isServerInviteValid=async invite=>{const token=tokenFromUrl(invite?.url);if(!token)return false;const{data,error}=await invokePublicFunction('resolve-invite',{token});return!error&&data?.valid===true};
 
 const createServerInvite=async(board,status,copy,share,urlBox)=>{
   copy.disabled=true;share.disabled=true;copy.textContent='링크 만드는 중…';
@@ -59,8 +61,9 @@ async function connectOwnerInvite(){
   };
   syncControls(board.invite_enabled);
   if(board.invite_enabled){
-    if(invite?.url&&(!invite.expiresAt||new Date(invite.expiresAt)>new Date())){setInviteUrl(urlBox,invite.url);status.textContent=`${new Date(invite.expiresAt).toLocaleDateString('ko-KR')}까지 사용할 수 있어요.`}
-    else invite=await createServerInvite(board,status,copy,share,urlBox);
+    const cachedUsable=invite?.url&&(!invite.expiresAt||new Date(invite.expiresAt)>new Date())&&await isServerInviteValid(invite);
+    if(cachedUsable){setInviteUrl(urlBox,invite.url);status.textContent=`${new Date(invite.expiresAt).toLocaleDateString('ko-KR')}까지 사용할 수 있어요.`}
+    else{sessionStorage.removeItem(`reelation-owner-invite:${board.id}`);invite=await createServerInvite(board,status,copy,share,urlBox)}
   }else status.textContent='서버에서 새로운 참여를 차단하고 있어요.';
   const copyInvite=async()=>{if(!invite?.url)return;const copied=await copyText(invite.url);showToast(copied?'친구 초대 링크를 복사했어요':'링크를 길게 눌러 복사해주세요')};
   copy.onclick=copyInvite;urlBox.onclick=copyInvite;
