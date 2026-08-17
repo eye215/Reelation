@@ -121,7 +121,7 @@ render();
 function visitorPagePublic(publicId){
   let meta=null;
   try{meta=JSON.parse(sessionStorage.getItem('reelation-invite-meta')||'null')}catch{}
-  if(!publicId||meta?.inviteToken!==publicId||sessionStorage.getItem('reelation-valid-invite')!==publicId){visitorLayout('<main class="visitor-error"><span>REELATION</span><h1>상영이 종료된 링크예요.</h1><p>초대가 비활성화되었거나 존재하지 않는 Reelation입니다.</p></main>');return}
+  if(!publicId||meta?.inviteToken!==publicId||sessionStorage.getItem('reelation-valid-invite')!==publicId){visitorLayout('<main class="r17-invite-loading" aria-live="polite"><div class="r17-invite-mark">Reelation<span>.</span></div><div class="r17-invite-orbit" aria-hidden="true"><i></i><i></i><i></i></div><h1>친구의 영화를<br>불러오고 있어요.</h1><p>초대 상태와 공개 정보를 안전하게 확인하는 중입니다.</p></main>');return}
   const escapePublic=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
   const ownerName=escapePublic(meta.ownerNickname||'친구'),title=escapePublic(meta.title||'나의 인생 영화'),genre=escapePublic(relationshipGenreKo[meta.primaryGenre]||'인생 드라마'),characterType=escapePublic(meta.characterType||'이 영화의 주인공'),tagline=escapePublic(meta.tagline||'사람과 사건을 지나며 자기만의 장면을 만들어가는 사람');
   const imageKey=meta.posterImageKey||meta.heroImageKey,{data:imageData}=imageKey?supabase.storage.from('movie-posters').getPublicUrl(imageKey):{data:null},poster=imageData?.publicUrl,posterVisual=poster?`<div class="cast-art r12-public-poster" style="background-image:url(&quot;${poster}&quot;)" aria-hidden="true"></div>`:'<div class="cast-art r12-public-poster r12-public-poster--fallback" aria-hidden="true"></div>',returnPath=`/reel/${publicId}?join=1`;
