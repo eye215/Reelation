@@ -37,6 +37,9 @@ Deno.serve(async (req) => {
     const castInput = normalize(castBirth, cast.nickname);
     const ownerSaju = calculateSaju(ownerInput), castSaju = calculateSaju(castInput);
     const result = analyze(ownerInput, castInput);
+    const characterImageKey = `pillars/${castSaju.dayPillarIndex}-${castInput.gender === 'MALE' ? 'male' : 'female'}.jpg`;
+    const { error: imageKeyError } = await admin.from('cast_members').update({ character_image_key: characterImageKey }).eq('id', cast.id);
+    if (imageKeyError) throw imageKeyError;
     const saveSaju = async (birthProfileId: string, saju: any) => {
       const { data, error } = await admin.from('saju_profiles').upsert({
         birth_profile_id: birthProfileId, engine_version: saju.engineVersion,
