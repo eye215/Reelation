@@ -67,7 +67,14 @@ Deno.serve(async (req) => {
     const { error: rankingError } = await admin.rpc('recalculate_board_rankings', { p_board_id: board.id });
     if (rankingError) throw rankingError;
     await admin.from('analysis_jobs').update({ status: 'DONE', last_error: null, updated_at: new Date().toISOString() }).eq('id', job.id);
-    return json({ ok: true, analysisId: analysis.id, status: 'DONE', calculationScope: 'DAY_PILLAR_MVP' });
+    let narrativeQueued=false;
+    try {
+      const narrativeResponse=await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/process-relationship-narrative`,{method:'POST',headers:{Authorization:`Bearer ${serviceKey}`,'Content-Type':'application/json'},body:JSON.stringify({analysisId:analysis.id})});
+      narrativeQueued=narrativeResponse.ok;
+    } catch (_) {
+      // Structured scores and rankings remain usable when the optional AI layer is unavailable.
+    }
+    return json({ ok: true, analysisId: analysis.id, status: 'DONE', narrativeQueued, calculationScope: 'DAY_PILLAR_MVP' });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'ANALYSIS_FAILED';
     await admin.from('analysis_jobs').update({ status: 'FAILED', last_error: message.slice(0, 500), updated_at: new Date().toISOString() }).eq('id', job.id);
