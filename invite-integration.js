@@ -2,10 +2,23 @@ import{supabase,getVerifiedUser,signInWithMagicLink,signInWithKakao,invokePublic
 
 const app=document.querySelector('#app');
 const tokenFromPath=()=>location.pathname.match(/^\/reel\/([A-Za-z0-9_-]{40,128})\/?$/)?.[1]||null;
-const errorCopy={INVALID_TOKEN:'링크 형식이 올바르지 않아요.',INVITE_NOT_FOUND:'존재하지 않거나 변경된 초대 링크예요.',INVITE_DISABLED:'초대가 종료된 링크예요.',INVITE_EXPIRED:'사용 기간이 만료된 링크예요.'};
+const errorCopy={INVALID_TOKEN:'링크 형식이 올바르지 않아요.',INVITE_NOT_FOUND:'존재하지 않거나 변경된 초대 링크예요.',INVITE_DISABLED:'초대가 종료된 링크예요.',INVITE_EXPIRED:'사용 기간이 만료된 링크예요.',SERVER_UNAVAILABLE:'초대 정보를 잠시 불러오지 못했어요.'};
 const showToast=message=>{const toast=document.querySelector('#toast');if(!toast)return;toast.textContent=message;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),1800)};
 const copyText=async value=>{try{await navigator.clipboard.writeText(value);return true}catch{const input=document.createElement('textarea');input.value=value;input.readOnly=true;input.style.position='fixed';input.style.opacity='0';document.body.append(input);input.select();let copied=false;try{copied=document.execCommand('copy')}catch{}input.remove();return copied}};
 const functionErrorCode=async(data,error,fallback)=>{if(data?.error)return data.error;try{const payload=await error?.context?.clone?.().json();if(payload?.error)return payload.error}catch{}return fallback};
+const terminalInviteErrors=new Set(['INVALID_TOKEN','INVITE_NOT_FOUND','INVITE_DISABLED','INVITE_EXPIRED']);
+const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+const resolveInviteWithRetry=async(token,attempts=3)=>{
+  let latest={data:null,error:null,code:'SERVER_UNAVAILABLE'};
+  for(let attempt=0;attempt<attempts;attempt+=1){
+    const{data,error}=await invokePublicFunction('resolve-invite',{token});
+    const code=error||!data?.valid?await functionErrorCode(data,error,'SERVER_UNAVAILABLE'):null;
+    latest={data,error,code};
+    if(data?.valid||terminalInviteErrors.has(code))return latest;
+    if(attempt<attempts-1)await wait(350*(attempt+1));
+  }
+  return latest;
+};
 
 function showOwnerLogin(card,status,copy){
   if(card.querySelector('.owner-login'))return;
@@ -22,7 +35,7 @@ const setInviteUrl=(urlBox,value)=>{
   if(label)label.textContent=value;else urlBox.textContent=value;
 };
 const tokenFromUrl=value=>{try{return new URL(value,location.origin).pathname.match(/^\/reel\/([A-Za-z0-9_-]{40,128})\/?$/)?.[1]||null}catch{return null}};
-const isServerInviteValid=async invite=>{const token=tokenFromUrl(invite?.url);if(!token)return false;const{data,error}=await invokePublicFunction('resolve-invite',{token});return!error&&data?.valid===true};
+const isServerInviteValid=async invite=>{const token=tokenFromUrl(invite?.url);if(!token)return false;const{data,error}=await resolveInviteWithRetry(token);return!error&&data?.valid===true};
 
 const createServerInvite=async(board,status,copy,share,urlBox)=>{
   copy.disabled=true;share.disabled=true;copy.textContent='링크 만드는 중…';
@@ -91,12 +104,12 @@ async function resolveVisitorInvite(){
   const token=tokenFromPath();
   let cachedMeta=null;try{cachedMeta=JSON.parse(sessionStorage.getItem('reelation-invite-meta')||'null')}catch{}
   if(!token)return;
-  const{data,error}=await invokePublicFunction('resolve-invite',{token});
+  const{data,error,code}=await resolveInviteWithRetry(token);
   if(error||!data?.valid){
     sessionStorage.removeItem('reelation-valid-invite');
     sessionStorage.removeItem('reelation-invite-meta');
-    const code=await functionErrorCode(data,error,'INVITE_NOT_FOUND');
-    app.innerHTML=`<main class="server-invite-error"><span>Reelation.</span><h1>${errorCopy[code]||'초대 링크를 확인할 수 없어요.'}</h1><p>링크를 보낸 친구에게 새로운 초대 링크를 요청해주세요.</p><button onclick="location.href='/'">Reelation 둘러보기</button></main>`;return;
+    const transient=code==='SERVER_UNAVAILABLE';
+    app.innerHTML=`<main class="server-invite-error"><span>Reelation.</span><h1>${errorCopy[code]||'초대 링크를 확인할 수 없어요.'}</h1><p>${transient?'네트워크 연결을 확인한 뒤 다시 시도해주세요.':'링크를 보낸 친구에게 새로운 초대 링크를 요청해주세요.'}</p><button onclick="${transient?'location.reload()':"location.href='/'"}">${transient?'다시 시도':'Reelation 둘러보기'}</button></main>`;return;
   }
   // A valid invite opens the owner's movie immediately. Authentication is
   // intentionally deferred until the visitor presses the participation CTA.
