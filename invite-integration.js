@@ -100,14 +100,6 @@ async function resolveVisitorInvite(){
   }
   // A valid invite opens the owner's movie immediately. Authentication is
   // intentionally deferred until the visitor presses the participation CTA.
-  const saved=JSON.parse(localStorage.getItem('reelation-state')||'null');
-  if(saved){
-    saved.board={...(saved.board||{}),publicId:token,id:data.boardId||saved.board?.id};
-    saved.invite=true;
-    saved.owner={...(saved.owner||{}),nickname:data.ownerNickname};
-    saved.cast=[];
-    localStorage.setItem('reelation-state',JSON.stringify(saved));
-  }
   const publicId=data.publicId;
   const[{data:reel},{data:cast}]=publicId?await Promise.all([
     supabase.from('public_reels').select('public_id,owner_nickname,title,hero_image_key,cast_count,primary_genre,theme_key,character_type,tagline,poster_image_key').eq('public_id',publicId).maybeSingle(),
@@ -123,7 +115,7 @@ async function resolveVisitorInvite(){
 function connectGuestSubmission(){
   const token=tokenFromPath();if(!token||sessionStorage.getItem('reelation-valid-invite')!==token)return;
   const form=document.querySelector('#visitorJoinForm, #visitorForm');if(!form||form.dataset.serverBound)return;
-  form.dataset.serverBound='true';const localSubmit=form.onsubmit;
+  form.dataset.serverBound='true';
   form.onsubmit=async event=>{
     event.preventDefault();
     const user=await getVerifiedUser();
@@ -138,8 +130,11 @@ function connectGuestSubmission(){
     if(error||!data?.ok){const code=await functionErrorCode(data,error,'SUBMISSION_FAILED');const messages={AUTH_REQUIRED:'참여하려면 이메일 로그인이 필요해요.',DUPLICATE_PARTICIPATION:'이미 참여했어요. 기존 캐릭터를 확인해주세요.',INVITE_INVALID:'초대가 종료되었거나 만료됐어요.',INVALID_TOKEN:'초대 링크를 확인해주세요.',INVALID_NICKNAME:'닉네임을 확인해주세요.',INVALID_BIRTH_DATE:'생년월일을 확인해주세요.',INVALID_BIRTH_TIME:'출생 시간을 확인해주세요.',INVALID_GENDER:'성별을 확인해주세요.',CONSENT_REQUIRED:'개인정보 이용 동의가 필요해요.'};submit.disabled=false;submit.textContent='다시 시도';showToast(messages[code]||'저장하지 못했어요. 다시 시도해주세요.');return}
     form.dataset.castMemberId=data.castMemberId;
     form.dataset.participationId=data.participationId;
-    await localSubmit?.call(form,event);
-    showToast('친구의 Board에 안전하게 참여했어요');
+    form.hidden=true;
+    const result=document.querySelector('#visitorJoinResult, #visitorResult');
+    if(result)result.innerHTML='<div class="r12-join-result r12-join-result--pending"><span>CASTING ACCEPTED</span><h3>친구의 영화에 참여했어요.</h3><p>관계 분석과 캐릭터를 만드는 중이에요. 원본 생년월일과 출생시간은 영화 주인에게 공개되지 않습니다.</p><button type="button" data-result-close>영화로 돌아가기</button></div>';
+    result?.querySelector('[data-result-close]')?.addEventListener('click',()=>document.querySelector('#visitorJoinDialog')?.close());
+    showToast('친구의 영화에 안전하게 참여했어요');
   };
 }
 
