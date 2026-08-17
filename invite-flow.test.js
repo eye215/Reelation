@@ -39,7 +39,7 @@ test('public invite resolution avoids unsupported authorization preflight',()=>{
   assert.match(resolver,/authorization,apikey,content-type/);
   const html=readFileSync(new URL('./index.html',import.meta.url),'utf8');
   assert.match(inviteClient,/supabase-client\.js\?v=public-invite-103/);
-  assert.match(html,/invite-integration\.js\?v=public-invite-103/);
+  assert.match(html,/invite-integration\.js\?v=visitor-integrity-106/);
 });
 
 test('current visitor V2 form is bound to the authenticated server transaction', () => {
@@ -47,7 +47,7 @@ test('current visitor V2 form is bound to the authenticated server transaction',
   assert.match(inviteClient, /#visitorJoinForm, #visitorForm/);
   assert.match(inviteClient, /#visitorJoinUnknown/);
   assert.match(inviteClient, /data\.participationId/);
-  assert.match(app, /e\.target\.dataset\.castMemberId\|\|'c'\+Date\.now\(\)/);
+  assert.match(inviteClient, /form\.dataset\.castMemberId=data\.castMemberId/);
 });
 
 test('valid invite routes directly to the movie main before authentication', () => {
@@ -75,6 +75,13 @@ test('owner exposes only a server-validated invite URL',()=>{
   assert.match(app,/id="copy" disabled/);
   assert.match(inviteClient,/isServerInviteValid/);
   assert.match(inviteClient,/tokenFromUrl/);
+});
+
+test('visitor participation preserves the visitor owner state and never fabricates a client score',()=>{
+  assert.doesNotMatch(inviteClient,/saved\.board=\{/);
+  assert.doesNotMatch(inviteClient,/localSubmit\?\.call/);
+  assert.match(inviteClient,/CASTING ACCEPTED/);
+  assert.match(inviteClient,/관계 분석과 캐릭터를 만드는 중/);
 });
 
 // These are intentionally visible as TODO until a real token-backed server flow exists.
