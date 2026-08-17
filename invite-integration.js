@@ -17,27 +17,55 @@ function showOwnerLogin(card,status,copy){
   card.append(panel);
 }
 
+const setInviteUrl=(urlBox,value)=>{
+  const label=urlBox.querySelector('span');
+  if(label)label.textContent=value;else urlBox.textContent=value;
+};
+
+const createServerInvite=async(board,status,copy,share,urlBox)=>{
+  copy.disabled=true;share.disabled=true;copy.textContent='링크 만드는 중…';
+  const{data,error}=await supabase.functions.invoke('create-invite',{body:{boardId:board.id}});
+  if(error||!data?.url){status.textContent='링크를 만들지 못했어요. 잠시 후 다시 시도해주세요.';copy.disabled=false;copy.textContent='다시 시도';return null}
+  const invite={url:data.url,expiresAt:data.expiresAt};
+  sessionStorage.setItem(`reelation-owner-invite:${board.id}`,JSON.stringify(invite));
+  setInviteUrl(urlBox,invite.url);
+  status.textContent=`${new Date(invite.expiresAt).toLocaleDateString('ko-KR')}까지 사용할 수 있어요.`;
+  copy.disabled=false;share.disabled=false;copy.textContent='링크 복사';
+  return invite;
+};
+
 async function connectOwnerInvite(){
   if(location.pathname!=='/invite')return;
-  const copy=document.querySelector('#copy'),urlBox=document.querySelector('#inviteUrl'),card=document.querySelector('.invite-card');
-  if(!copy||!urlBox||copy.dataset.serverBound||copy.dataset.authWaiting)return;
+  const copy=document.querySelector('#copy'),share=document.querySelector('#share'),toggle=document.querySelector('#toggle'),urlBox=document.querySelector('#inviteUrl'),card=document.querySelector('.r16-link-card, .invite-card');
+  if(!copy||!share||!toggle||!urlBox||!card||copy.dataset.serverBound||copy.dataset.authWaiting)return;
   copy.dataset.serverBound='true';
   const status=card.querySelector('.server-invite-status')||document.createElement('p');status.className='server-invite-status';status.textContent='서버 연결 상태를 확인하고 있어요.';if(!status.isConnected)card.append(status);
   const user=await getVerifiedUser();
   if(!user){status.textContent='Owner 로그인이 필요해요.';showOwnerLogin(card,status,copy);return}
-  const{data:board,error:boardError}=await supabase.from('casting_boards').select('id').eq('owner_user_id',user.id).maybeSingle();
+  const{data:board,error:boardError}=await supabase.from('casting_boards').select('id,invite_enabled').eq('owner_user_id',user.id).maybeSingle();
   if(boardError||!board){const retries=Number(copy.dataset.retries||0)+1;copy.dataset.retries=String(retries);if(retries>=5){status.textContent='보드를 연결하지 못했어요. 페이지를 새로고침해주세요.';copy.disabled=true;return}status.textContent='Reelation 보드를 생성하고 있어요.';delete copy.dataset.serverBound;copy.dataset.authWaiting='true';setTimeout(()=>{delete copy.dataset.authWaiting;connectOwnerInvite()},800);return}
-  status.textContent='실제 초대 링크를 만들 준비가 됐어요.';
   card.querySelector('.owner-login')?.remove();
-  copy.disabled=false;
-  copy.textContent='실제 링크 만들기';
-  copy.onclick=async()=>{
-    copy.disabled=true;copy.textContent='만드는 중…';
-    const{data,error}=await supabase.functions.invoke('create-invite',{body:{boardId:board.id}});
-    if(error||!data?.url){status.textContent='링크를 만들지 못했어요. 잠시 후 다시 시도해주세요.';copy.disabled=false;copy.textContent='다시 시도';return}
-    urlBox.textContent=data.url;status.textContent=`${new Date(data.expiresAt).toLocaleDateString('ko-KR')}까지 사용할 수 있어요.`;
-    const copied=await copyText(data.url);showToast(copied?'친구 초대 링크를 복사했어요':'링크를 길게 눌러 복사해주세요');
-    copy.disabled=false;copy.textContent='링크 다시 복사';copy.onclick=async()=>{const copiedAgain=await copyText(data.url);showToast(copiedAgain?'링크를 복사했어요':'링크를 길게 눌러 복사해주세요')};
+  let invite=null;
+  try{invite=JSON.parse(sessionStorage.getItem(`reelation-owner-invite:${board.id}`)||'null')}catch{}
+  const syncControls=enabled=>{
+    toggle.classList.toggle('is-open',enabled);toggle.setAttribute('aria-label',`초대 ${enabled?'끄기':'켜기'}`);
+    copy.disabled=!enabled;share.disabled=!enabled;urlBox.disabled=!enabled;
+  };
+  syncControls(board.invite_enabled);
+  if(board.invite_enabled){
+    if(invite?.url&&(!invite.expiresAt||new Date(invite.expiresAt)>new Date())){setInviteUrl(urlBox,invite.url);status.textContent=`${new Date(invite.expiresAt).toLocaleDateString('ko-KR')}까지 사용할 수 있어요.`}
+    else invite=await createServerInvite(board,status,copy,share,urlBox);
+  }else status.textContent='서버에서 새로운 참여를 차단하고 있어요.';
+  const copyInvite=async()=>{if(!invite?.url)return;const copied=await copyText(invite.url);showToast(copied?'친구 초대 링크를 복사했어요':'링크를 길게 눌러 복사해주세요')};
+  copy.onclick=copyInvite;urlBox.onclick=copyInvite;
+  share.onclick=async()=>{if(!invite?.url)return;if(navigator.share){try{await navigator.share({title:'Reelation 초대',text:'내 영화에서 당신은 어떤 사람일까요?',url:invite.url})}catch(error){if(error?.name!=='AbortError')await copyInvite()}}else await copyInvite()};
+  toggle.onclick=async()=>{
+    toggle.disabled=true;const next=!toggle.classList.contains('is-open');status.textContent=next?'새로운 초대 링크를 여는 중이에요.':'기존 초대 링크를 닫는 중이에요.';
+    const{error:boardUpdateError}=await supabase.from('casting_boards').update({invite_enabled:next}).eq('id',board.id).eq('owner_user_id',user.id);
+    if(boardUpdateError){status.textContent='초대 상태를 바꾸지 못했어요. 다시 시도해주세요.';toggle.disabled=false;return}
+    if(!next){await supabase.from('invites').update({status:'DISABLED'}).eq('board_id',board.id).eq('status','ACTIVE');sessionStorage.removeItem(`reelation-owner-invite:${board.id}`);invite=null;syncControls(false);status.textContent='기존 링크 접근을 서버에서 차단했어요.'}
+    else{syncControls(true);invite=await createServerInvite(board,status,copy,share,urlBox)}
+    toggle.disabled=false;
   };
 }
 
