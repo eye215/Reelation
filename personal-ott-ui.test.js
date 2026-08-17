@@ -131,7 +131,8 @@ test('new invite UI is connected to opaque server tokens and server-side disable
   const integration=fs.readFileSync(new URL('./invite-integration.js',import.meta.url),'utf8');
   assert.match(integration,/\.r16-link-card, \.invite-card/);
   assert.match(integration,/functions\.invoke\('create-invite'/);
-  assert.match(integration,/update\(\{invite_enabled:next\}\)/);
+  assert.match(integration,/update\(\{invite_enabled:false\}\)/);
+  assert.match(integration,/update\(\{invite_enabled:true\}\)/);
   assert.match(integration,/update\(\{status:'DISABLED'\}\)/);
   assert.match(integration,/sessionStorage\.removeItem\(`reelation-owner-invite:/);
 });
