@@ -30,9 +30,9 @@ test('save choice offers Kakao OAuth and optional identity linking',()=>{
   assert.match(app,/카카오로 저장하기/);
 });
 test('every browser module imports the same Supabase singleton URL',()=>{
-  for(const source of [app,invite,bootstrap,session,ownerSync])assert.match(source,/supabase-client\.js\?v=cdn-fallback-96/);
+  for(const source of [app,invite,bootstrap,session,ownerSync])assert.match(source,/supabase-client\.js\?v=public-invite-103/);
   const imports=[app,invite,bootstrap,session,ownerSync].flatMap(source=>source.match(/supabase-client\.js\?v=[A-Za-z0-9-]+/g)||[]);
-  assert.deepEqual(new Set(imports),new Set(['supabase-client.js?v=cdn-fallback-96']));
+  assert.deepEqual(new Set(imports),new Set(['supabase-client.js?v=public-invite-103']));
 });
 
 test('Supabase client falls back when the primary CDN is unavailable',()=>{
