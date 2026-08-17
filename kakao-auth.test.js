@@ -50,6 +50,12 @@ test('Kakao identity creates a public profile without duplicating provider ids',
   assert.match(migration,/raw_app_meta_data->>'provider'/);
   assert.doesNotMatch(migration,/kakao_id/i);
 });
+test('magic-link users are offered an explicit Kakao identity connection',()=>{
+  assert.match(session,/offerKakaoLink/);
+  assert.match(session,/providers\.has\('email'\)/);
+  assert.match(session,/providers\.has\('kakao'\)/);
+  assert.match(session,/linkKakaoIdentity\(location\.pathname\+location\.search\)/);
+});
 test('birth profile remains separate and is attached during owner bootstrap',()=>{
   assert.match(migration,/insert into public\.birth_profiles/);
   assert.match(migration,/birth_profile_id=v_birth_id/);
