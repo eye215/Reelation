@@ -37,6 +37,9 @@ test('public invite resolution avoids unsupported authorization preflight',()=>{
   assert.match(client,/invokePublicFunction/);
   assert.match(client,/headers:\{apikey:SUPABASE_PUBLISHABLE_KEY,'Content-Type':'application\/json'\}/);
   assert.match(resolver,/authorization,apikey,content-type/);
+  const html=readFileSync(new URL('./index.html',import.meta.url),'utf8');
+  assert.match(inviteClient,/supabase-client\.js\?v=public-invite-103/);
+  assert.match(html,/invite-integration\.js\?v=public-invite-103/);
 });
 
 test('current visitor V2 form is bound to the authenticated server transaction', () => {
@@ -65,6 +68,13 @@ test('cached invites are revalidated and disabled access is cleared', () => {
   assert.match(inviteClient, /removeItem\('reelation-valid-invite'\)/);
   assert.match(inviteClient, /reelation-invite-resolved/);
   assert.match(app, /addEventListener\('reelation-invite-resolved'/);
+});
+
+test('owner exposes only a server-validated invite URL',()=>{
+  assert.match(app,/안전한 초대 링크 준비 중/);
+  assert.match(app,/id="copy" disabled/);
+  assert.match(inviteClient,/isServerInviteValid/);
+  assert.match(inviteClient,/tokenFromUrl/);
 });
 
 // These are intentionally visible as TODO until a real token-backed server flow exists.
