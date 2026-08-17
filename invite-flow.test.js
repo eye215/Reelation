@@ -91,6 +91,13 @@ test('a fresh invite shows a neutral validation state before the server decides 
   assert.match(inviteClient,/server-invite-error/);
 });
 
+test('public reel routing mounts only the server-backed visitor renderer',()=>{
+  const render=app.match(/function render\(\)\{[^\n]+/)?.[0]||'';
+  assert.match(render,/visitorPagePublic\(publicId\)/);
+  assert.doesNotMatch(render,/visitorPageV2\(publicId\)/);
+  assert.doesNotMatch(app,/visitorPageV2=visitorPagePublic/);
+});
+
 // These are intentionally visible as TODO until a real token-backed server flow exists.
 // Converting one to a passing test requires exercising the deployed app and verifying DB rows.
 const normalCases = [
