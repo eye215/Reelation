@@ -12,10 +12,10 @@ test('personal OTT visual layer is mounted after legacy styles',()=>{
   assert.match(html,/reference-ott\.css\?v=mobile-ott-79/);
   assert.ok(html.indexOf('personal-ott.css')>html.indexOf('ott-ui.css'));
   assert.ok(html.indexOf('reference-ott.css')>html.indexOf('personal-ott.css'));
-  assert.match(html,/reelation-v2\.css\?v=session-restore-89/);
+  assert.match(html,/reelation-v2\.css\?v=ia-reconnect-99/);
   assert.ok(html.indexOf('reelation-v2.css')>html.indexOf('reference-ott.css'));
-  assert.match(html,/bootstrap\.js\?v=server-cast-sync-97/);
-  assert.match(bootstrap,/app\.js\?v=server-cast-sync-97/);
+  assert.match(html,/bootstrap\.js\?v=ia-reconnect-99/);
+  assert.match(bootstrap,/app\.js\?v=ia-reconnect-99/);
 });
 
 test('movie description opens from the poster as an immersive modal',()=>{
@@ -77,4 +77,24 @@ test('rebuilt owner and cast detail are image-first mobile experiences',()=>{
   assert.match(app,/r9-film-rail/);
   assert.match(v2,/scroll-snap-type:x mandatory/);
   assert.match(v2,/\.r9-poster\{position:relative;height:520px/);
+});
+
+test('owner root restores the movie home instead of repeating onboarding',()=>{
+  assert.match(app,/else if\(p==='\/'\)state\.onboarded\?board\(\):homePage\(\)/);
+});
+
+test('cast navigation is a grouped character explorer distinct from ranking',()=>{
+  const castList=app.slice(app.indexOf('function castList()'),app.indexOf('function add()'));
+  assert.match(castList,/r13-cast-page/);
+  assert.match(castList,/LEAD CAST/);
+  assert.match(castList,/SUPPORTING CAST/);
+  assert.match(castList,/FEATURED · CAMEO/);
+  assert.doesNotMatch(castList,/rankList\(/);
+  assert.match(v2,/\.r13-cast-rail/);
+});
+
+test('owner navigation names match the separated information architecture',()=>{
+  assert.match(app,/>영화<\/button>/);
+  assert.match(app,/>출연진<\/button>/);
+  assert.match(app,/>영향도<\/button>/);
 });
