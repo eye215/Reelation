@@ -23,8 +23,9 @@ Deno.serve(async req=>{
   const castMemberId=data?.[0]?.cast_member_id;
   EdgeRuntime.waitUntil((async()=>{
     const base=Deno.env.get('SUPABASE_URL')!,serviceKey=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,options={method:'POST',headers:{Authorization:`Bearer ${serviceKey}`,'Content-Type':'application/json'},body:JSON.stringify({castMemberId})};
-    for(const functionName of ['process-invite-analysis-v2','process-invite-analysis']){
-      try{const response=await fetch(`${base}/functions/v1/${functionName}`,options);if(response.ok)return;console.error('analysis dispatch rejected',functionName,response.status)}catch(error){console.error('analysis dispatch failed',functionName,error)}
+    for(let attempt=1;attempt<=3;attempt+=1){
+      try{const response=await fetch(`${base}/functions/v1/process-invite-analysis-v2`,options);if(response.ok)return;console.error('analysis dispatch rejected','process-invite-analysis-v2',response.status,attempt)}catch(error){console.error('analysis dispatch failed','process-invite-analysis-v2',attempt,error)}
+      if(attempt<3)await new Promise(resolve=>setTimeout(resolve,attempt*400));
     }
     console.error('analysis dispatch exhausted',castMemberId);
   })());
