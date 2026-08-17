@@ -2,16 +2,18 @@ import { supabase, getVerifiedUser } from './supabase-client.js?v=public-invite-
 
 const app = document.querySelector('#app');
 let syncing = false;
+let lastSyncAt = 0;
 
 async function syncOwnerUpdates() {
   if (
     syncing ||
     !app ||
-    (!['/board', '/cast'].includes(location.pathname) && !location.pathname.startsWith('/cast/')) ||
-    document.querySelector('.server-cast-updates')
+    Date.now() - lastSyncAt < 1200 ||
+    (!['/board', '/cast'].includes(location.pathname) && !location.pathname.startsWith('/cast/'))
   ) return;
 
   syncing = true;
+  lastSyncAt = Date.now();
 
   try {
     const user = await getVerifiedUser();
@@ -132,9 +134,13 @@ async function syncOwnerUpdates() {
     });
     if (syncedMembers.length) window.dispatchEvent(new CustomEvent('reelation-server-cast-synced', { detail: { members: syncedMembers } }));
 
-    if (!freshMembers.length || location.pathname.startsWith('/cast/')) return;
+    const existingSection = document.querySelector('.server-cast-updates');
+    if (!freshMembers.length || location.pathname.startsWith('/cast/')) {
+      existingSection?.remove();
+      return;
+    }
 
-    const section = document.createElement('section');
+    const section = existingSection || document.createElement('section');
     section.className = 'server-cast-updates';
     section.innerHTML = `
       <div class="server-cast-updates__head">
@@ -152,7 +158,7 @@ async function syncOwnerUpdates() {
     `;
 
     const target = document.querySelector('.movie-home-feed') || document.querySelector('main.page');
-    target?.prepend(section);
+    if (!existingSection) target?.prepend(section);
   } finally {
     syncing = false;
   }
@@ -167,3 +173,13 @@ function escapeHtml(value) {
 const observer = new MutationObserver(syncOwnerUpdates);
 if (app) observer.observe(app, { childList: true, subtree: true });
 syncOwnerUpdates();
+
+const syncInterval = window.setInterval(() => {
+  if (document.visibilityState === 'visible') syncOwnerUpdates();
+}, 6000);
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') syncOwnerUpdates();
+});
+
+window.addEventListener('pagehide', () => window.clearInterval(syncInterval), { once: true });
