@@ -25,20 +25,25 @@ async function syncOwnerUpdates() {
 
     if (boardError || !board) return;
 
-    const [memberResult, jobResult] = await Promise.all([
+    const [memberResult, jobResult, analysisResult] = await Promise.all([
       supabase
         .from('cast_members')
-        .select('id,nickname,source_type,status,created_at')
+        .select('id,nickname,source_type,status,created_at,character_image_key')
         .eq('board_id', board.id)
         .eq('status', 'ACTIVE')
         .order('created_at', { ascending: false }),
       supabase
         .from('analysis_jobs')
         .select('cast_member_id,status')
+        .eq('board_id', board.id),
+      supabase
+        .from('relationship_analyses')
+        .select('id,cast_member_id,scoring_version,overall_score,attraction_score,stability_score,impact_score,growth_score,longevity_score,cooperation_score,conflict_score,cast_tier,life_role,relationship_genre,confidence,feature_codes,status,updated_at')
         .eq('board_id', board.id)
+        .order('updated_at', { ascending: false })
     ]);
 
-    if (memberResult.error || jobResult.error) return;
+    if (memberResult.error || jobResult.error || analysisResult.error) return;
 
     let localCast = [];
     try {
@@ -57,6 +62,53 @@ async function syncOwnerUpdates() {
     const jobStatus = new Map(
       (jobResult.data || []).map((job) => [job.cast_member_id, job.status])
     );
+    const latestAnalysis = new Map();
+    for (const analysis of analysisResult.data || []) {
+      if (!latestAnalysis.has(analysis.cast_member_id)) latestAnalysis.set(analysis.cast_member_id, analysis);
+    }
+    const analysisIds = [...latestAnalysis.values()].map((analysis) => analysis.id);
+    const genreResult = analysisIds.length
+      ? await supabase.from('genre_analyses').select('relationship_analysis_id,genre,score,role').in('relationship_analysis_id', analysisIds)
+      : { data: [], error: null };
+    if (genreResult.error) return;
+    const genresByAnalysis = new Map();
+    for (const genre of genreResult.data || []) {
+      const key = genre.relationship_analysis_id;
+      if (!genresByAnalysis.has(key)) genresByAnalysis.set(key, {});
+      genresByAnalysis.get(key)[String(genre.genre).toLowerCase()] = { score: genre.score, role: genre.role };
+    }
+    const syncedMembers = freshMembers.flatMap((member) => {
+      const analysis = latestAnalysis.get(member.id);
+      if (!analysis || jobStatus.get(member.id) !== 'DONE') return [];
+      const imageMatch = String(member.character_image_key || '').match(/pillars\/(\d+)-(male|female)\.jpg$/);
+      const dayPillarIndex = Number(imageMatch?.[1] || 0);
+      return [{
+        id: member.id,
+        nickname: member.nickname,
+        gender: imageMatch?.[2] === 'male' ? 'MALE' : 'FEMALE',
+        sourceType: 'INVITE',
+        createdAt: Date.parse(member.created_at) || Date.now(),
+        analysis: {
+          scores: {
+            overall: analysis.overall_score, attraction: analysis.attraction_score, stability: analysis.stability_score,
+            impact: analysis.impact_score, growth: analysis.growth_score, longevity: analysis.longevity_score,
+            cooperation: analysis.cooperation_score, conflict: analysis.conflict_score,
+          },
+          categoryResults: genresByAnalysis.get(analysis.id) || {},
+          castTier: analysis.cast_tier,
+          lifeRole: analysis.life_role,
+          relationshipGenre: analysis.relationship_genre,
+          character: { dayPillarIndex, stemIndex: dayPillarIndex % 10, branchIndex: dayPillarIndex % 12 },
+          confidence: analysis.confidence,
+          featureCodes: analysis.feature_codes || [],
+          scoringVersion: analysis.scoring_version,
+          sajuEngineVersion: 'saju-v2-gregorian',
+          status: 'DONE',
+        },
+      }];
+    });
+    if (syncedMembers.length) window.dispatchEvent(new CustomEvent('reelation-server-cast-synced', { detail: { members: syncedMembers } }));
+
     const section = document.createElement('section');
     section.className = 'server-cast-updates';
     section.innerHTML = `
