@@ -7,7 +7,7 @@ async function syncOwnerUpdates() {
   if (
     syncing ||
     !app ||
-    !['/board', '/cast'].includes(location.pathname) ||
+    (!['/board', '/cast'].includes(location.pathname) && !location.pathname.startsWith('/cast/')) ||
     document.querySelector('.server-cast-updates')
   ) return;
 
@@ -52,12 +52,9 @@ async function syncOwnerUpdates() {
       localCast = [];
     }
 
-    const localIds = new Set(localCast.map((member) => member.id));
     const freshMembers = (memberResult.data || []).filter(
-      (member) => member.source_type === 'INVITE' && !localIds.has(member.id)
+      (member) => member.source_type === 'INVITE' && !localCast.some((local) => local.id === member.id)
     );
-
-    if (!freshMembers.length) return;
 
     const jobStatus = new Map(
       (jobResult.data || []).map((job) => [job.cast_member_id, job.status])
@@ -70,19 +67,28 @@ async function syncOwnerUpdates() {
     const genreResult = analysisIds.length
       ? await supabase.from('genre_analyses').select('relationship_analysis_id,genre,score,role').in('relationship_analysis_id', analysisIds)
       : { data: [], error: null };
-    if (genreResult.error) return;
+    const narrativeResult = analysisIds.length
+      ? await supabase.from('narratives').select('relationship_analysis_id,prompt_version,model_version,headline,summary,role_reason,relationship_pattern,conflict_pattern,long_term_pattern,status,updated_at').in('relationship_analysis_id', analysisIds).order('updated_at', { ascending: false })
+      : { data: [], error: null };
+    if (genreResult.error || narrativeResult.error) return;
     const genresByAnalysis = new Map();
     for (const genre of genreResult.data || []) {
       const key = genre.relationship_analysis_id;
       if (!genresByAnalysis.has(key)) genresByAnalysis.set(key, {});
       genresByAnalysis.get(key)[String(genre.genre).toLowerCase()] = { score: genre.score, role: genre.role };
     }
-    const syncedMembers = freshMembers.flatMap((member) => {
+    const narrativeByAnalysis = new Map();
+    for (const narrative of narrativeResult.data || []) {
+      if (!narrativeByAnalysis.has(narrative.relationship_analysis_id)) narrativeByAnalysis.set(narrative.relationship_analysis_id, narrative);
+    }
+    const localById = new Map(localCast.map((member) => [member.id, member]));
+    const syncedMembers = (memberResult.data || []).flatMap((member) => {
       const analysis = latestAnalysis.get(member.id);
       if (!analysis || jobStatus.get(member.id) !== 'DONE') return [];
+      const narrative = narrativeByAnalysis.get(analysis.id) || null;
       const imageMatch = String(member.character_image_key || '').match(/pillars\/(\d+)-(male|female)\.jpg$/);
       const dayPillarIndex = Number(imageMatch?.[1] || 0);
-      return [{
+      const synced = {
         id: member.id,
         nickname: member.nickname,
         gender: imageMatch?.[2] === 'male' ? 'MALE' : 'FEMALE',
@@ -103,11 +109,30 @@ async function syncOwnerUpdates() {
           featureCodes: analysis.feature_codes || [],
           scoringVersion: analysis.scoring_version,
           sajuEngineVersion: 'saju-v2-gregorian',
+          narrative: narrative ? {
+            promptVersion: narrative.prompt_version,
+            modelVersion: narrative.model_version,
+            headline: narrative.headline,
+            summary: narrative.summary,
+            roleReason: narrative.role_reason,
+            relationshipPattern: narrative.relationship_pattern,
+            conflictPattern: narrative.conflict_pattern,
+            longTermPattern: narrative.long_term_pattern,
+            status: narrative.status,
+            updatedAt: narrative.updated_at,
+          } : { status: 'PENDING' },
           status: 'DONE',
         },
-      }];
+      };
+      const local = localById.get(member.id);
+      const localNarrative = local?.analysis?.narrative;
+      const nextNarrative = synced.analysis.narrative;
+      const changed = !local || localNarrative?.status !== nextNarrative.status || localNarrative?.updatedAt !== nextNarrative.updatedAt;
+      return changed ? [synced] : [];
     });
     if (syncedMembers.length) window.dispatchEvent(new CustomEvent('reelation-server-cast-synced', { detail: { members: syncedMembers } }));
+
+    if (!freshMembers.length || location.pathname.startsWith('/cast/')) return;
 
     const section = document.createElement('section');
     section.className = 'server-cast-updates';
