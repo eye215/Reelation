@@ -1,4 +1,4 @@
-import{supabase,getVerifiedUser,signInWithMagicLink,signInWithKakao}from'./supabase-client.js?v=cdn-fallback-96';
+import{supabase,getVerifiedUser,signInWithMagicLink,signInWithKakao,invokePublicFunction}from'./supabase-client.js?v=cdn-fallback-96';
 
 const app=document.querySelector('#app');
 const tokenFromPath=()=>location.pathname.match(/^\/reel\/([A-Za-z0-9_-]{40,128})\/?$/)?.[1]||null;
@@ -50,6 +50,12 @@ async function connectOwnerInvite(){
   const syncControls=enabled=>{
     toggle.classList.toggle('is-open',enabled);toggle.setAttribute('aria-label',`초대 ${enabled?'끄기':'켜기'}`);
     copy.disabled=!enabled;share.disabled=!enabled;urlBox.disabled=!enabled;
+    const headState=document.querySelector('.r16-invite-head>i'),linkTitle=document.querySelector('.r16-link-card h2'),controlTitle=document.querySelector('.r16-control b'),controlCopy=document.querySelector('.r16-control small');
+    if(headState){headState.textContent=enabled?'OPEN':'CLOSED';headState.classList.toggle('is-open',enabled)}
+    if(linkTitle)linkTitle.textContent=enabled?'초대 링크가 열려 있어요.':'현재 초대를 받지 않고 있어요.';
+    if(controlTitle)controlTitle.textContent=enabled?'새로운 참여 허용 중':'새로운 참여 차단됨';
+    if(controlCopy)controlCopy.textContent=enabled?'링크를 받은 친구가 참여할 수 있어요.':'기존 링크로 들어와도 참여할 수 없어요.';
+    try{const saved=JSON.parse(localStorage.getItem('reelation-state')||'null');if(saved){saved.invite=enabled;localStorage.setItem('reelation-state',JSON.stringify(saved))}}catch{}
   };
   syncControls(board.invite_enabled);
   if(board.invite_enabled){
@@ -61,10 +67,19 @@ async function connectOwnerInvite(){
   share.onclick=async()=>{if(!invite?.url)return;if(navigator.share){try{await navigator.share({title:'Reelation 초대',text:'내 영화에서 당신은 어떤 사람일까요?',url:invite.url})}catch(error){if(error?.name!=='AbortError')await copyInvite()}}else await copyInvite()};
   toggle.onclick=async()=>{
     toggle.disabled=true;const next=!toggle.classList.contains('is-open');status.textContent=next?'새로운 초대 링크를 여는 중이에요.':'기존 초대 링크를 닫는 중이에요.';
-    const{error:boardUpdateError}=await supabase.from('casting_boards').update({invite_enabled:next}).eq('id',board.id).eq('owner_user_id',user.id);
-    if(boardUpdateError){status.textContent='초대 상태를 바꾸지 못했어요. 다시 시도해주세요.';toggle.disabled=false;return}
-    if(!next){await supabase.from('invites').update({status:'DISABLED'}).eq('board_id',board.id).eq('status','ACTIVE');sessionStorage.removeItem(`reelation-owner-invite:${board.id}`);invite=null;syncControls(false);status.textContent='기존 링크 접근을 서버에서 차단했어요.'}
-    else{syncControls(true);invite=await createServerInvite(board,status,copy,share,urlBox)}
+    if(!next){
+      const{error:disableError}=await supabase.from('invites').update({status:'DISABLED'}).eq('board_id',board.id).eq('status','ACTIVE');
+      if(disableError){status.textContent='기존 링크를 닫지 못했어요. 다시 시도해주세요.';toggle.disabled=false;return}
+      const{error:boardUpdateError}=await supabase.from('casting_boards').update({invite_enabled:false}).eq('id',board.id).eq('owner_user_id',user.id);
+      if(boardUpdateError){status.textContent='초대 상태를 바꾸지 못했어요. 다시 시도해주세요.';toggle.disabled=false;return}
+      sessionStorage.removeItem(`reelation-owner-invite:${board.id}`);invite=null;syncControls(false);status.textContent='기존 링크 접근을 서버에서 차단했어요.';
+    }else{
+      invite=await createServerInvite(board,status,copy,share,urlBox);
+      if(!invite){syncControls(false);toggle.disabled=false;return}
+      const{error:boardUpdateError}=await supabase.from('casting_boards').update({invite_enabled:true}).eq('id',board.id).eq('owner_user_id',user.id);
+      if(boardUpdateError){await supabase.from('invites').update({status:'DISABLED'}).eq('board_id',board.id).eq('status','ACTIVE');sessionStorage.removeItem(`reelation-owner-invite:${board.id}`);invite=null;syncControls(false);status.textContent='초대 상태를 바꾸지 못했어요. 다시 시도해주세요.';toggle.disabled=false;return}
+      syncControls(true);
+    }
     toggle.disabled=false;
   };
 }
@@ -73,7 +88,7 @@ async function resolveVisitorInvite(){
   const token=tokenFromPath();
   let cachedMeta=null;try{cachedMeta=JSON.parse(sessionStorage.getItem('reelation-invite-meta')||'null')}catch{}
   if(!token)return;
-  const{data,error}=await supabase.functions.invoke('resolve-invite',{body:{token}});
+  const{data,error}=await invokePublicFunction('resolve-invite',{token});
   if(error||!data?.valid){
     sessionStorage.removeItem('reelation-valid-invite');
     sessionStorage.removeItem('reelation-invite-meta');
