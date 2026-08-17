@@ -26,9 +26,17 @@ test('ordinary client inserts cannot forge INVITE cast members', () => {
 });
 
 test('invite client resolves opaque tokens and submits through server functions', () => {
-  assert.match(inviteClient, /functions\.invoke\('resolve-invite'/);
+  assert.match(inviteClient, /invokePublicFunction\('resolve-invite'/);
   assert.match(inviteClient, /functions\.invoke\('submit-invite-auth'/);
   assert.match(inviteClient, /\^\\\/reel\\\/\(\[A-Za-z0-9_-\]\{40,128\}\)/);
+});
+
+test('public invite resolution avoids unsupported authorization preflight',()=>{
+  const client=readFileSync(new URL('./supabase-client.js',import.meta.url),'utf8');
+  const resolver=readFileSync(new URL('./supabase/functions/resolve-invite/index.ts',import.meta.url),'utf8');
+  assert.match(client,/invokePublicFunction/);
+  assert.match(client,/headers:\{apikey:SUPABASE_PUBLISHABLE_KEY,'Content-Type':'application\/json'\}/);
+  assert.match(resolver,/authorization,apikey,content-type/);
 });
 
 test('current visitor V2 form is bound to the authenticated server transaction', () => {
