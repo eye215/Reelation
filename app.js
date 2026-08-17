@@ -18,6 +18,15 @@ const savedState=readLocalState();
 let state=savedState||{onboarded:false,owner:{...owner,nickname:'나'},cast:[],invite:true,authUserId:null,board:{ownerId:owner.id,publicId:routePublicId||makeInitialPublicId()}};
 state.owner.id ||= owner.id;state.board ||= {ownerId:state.owner.id,publicId:state.inviteToken||routePublicId||'reel_yuri_demo'};state.inviteToken=state.board.publicId;state.authUserId=window.__REELATION_AUTH_USER_ID__||null;writeLocalState(state);
 const save=()=>writeLocalState(state);
+window.addEventListener('reelation-server-cast-synced',event=>{
+  const members=Array.isArray(event.detail?.members)?event.detail.members:[];
+  if(!members.length)return;
+  const byId=new Map(state.cast.map(member=>[member.id,member]));
+  for(const member of members)byId.set(member.id,member);
+  state.cast=[...byId.values()];
+  save();
+  render();
+});
 if(state.cast.some(c=>c.analysis?.sajuEngineVersion!=='saju-v2-gregorian')){state.cast.forEach(c=>c.analysis=analyze(state.owner,c));save()}
 const displayScore=value=>Math.round(Number(value));
 const displayRank=(rank,total)=>`${total}명 중 ${rank}위 <small>(상위 ${Math.ceil(rank/Math.max(total,1)*100)}%)</small>`;
