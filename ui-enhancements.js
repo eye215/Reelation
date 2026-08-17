@@ -18,7 +18,7 @@ const topic=name=>{const last=name.charCodeAt(name.length-1);return last>=0xac00
 const relationKeyword=person=>{const s=person.analysis.scores;return s.growth>=70?'성장':s.stability>=70?'편안함':s.conflict>=70?'긴장':s.impact>=75?'강한 영향':'호기심'};
 
 function enhanceNavigation(){
-  const labels=[['/board','BOARD'],['/cast','CAST'],['/ranking','RANKING'],['/settings','MY']];
+  const labels=[['/board','영화'],['/cast','출연진'],['/ranking','영향도'],['/settings','MY']];
   document.querySelectorAll('.bottomnav .navitem').forEach(button=>{if(button.dataset.navEnhanced)return;const target=labels.find(([path])=>button.dataset.go===path);if(target){const icon=button.querySelector('i')?.outerHTML||'';button.dataset.navEnhanced='true';button.innerHTML=`${icon}${target[1]}`}});
 }
 
