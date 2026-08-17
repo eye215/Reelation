@@ -1,4 +1,4 @@
-import { supabase, getVerifiedUser } from './supabase-client.js?v=cdn-fallback-96';
+import { supabase, getVerifiedUser } from './supabase-client.js?v=public-invite-103';
 
 const app = document.querySelector('#app');
 let syncing = false;
