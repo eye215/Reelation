@@ -85,3 +85,11 @@ test('owner sync keeps polling pending analysis and AI narrative until completio
   assert.match(ownerSync,/existingSection\?\.remove\(\)/);
   assert.doesNotMatch(ownerSync,/document\.querySelector\('\.server-cast-updates'\)\s*\n\s*\) return/);
 });
+
+test('server analysis supports the same lunar birth-date normalization as the client',()=>{
+  const serverEngine=read('supabase/functions/process-invite-analysis/engine.ts');
+  assert.match(serverEngine,/Intl\.DateTimeFormat\('en-u-ca-chinese'/);
+  assert.match(serverEngine,/export function lunarToSolar/);
+  assert.match(serverEngine,/const p=normalizeBirthDate\(input\)/);
+  assert.doesNotMatch(serverEngine,/LUNAR_CALENDAR_NOT_SUPPORTED/);
+});
