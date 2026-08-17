@@ -116,3 +116,22 @@ test('MY is an account and privacy hub instead of the legacy demo card',()=>{
   assert.doesNotMatch(app,/데모 초기화/);
   assert.match(html,/my-page\.css\?v=my-hub-101/);
 });
+
+test('invite management supports copy, native share, privacy and server-facing status',()=>{
+  const invite=app.slice(app.indexOf('function invite()'),app.indexOf('function settings()'));
+  assert.match(invite,/r16-invite-page/);
+  assert.match(invite,/navigator\.clipboard\.writeText/);
+  assert.match(invite,/navigator\.share/);
+  assert.match(invite,/원본 정보는/);
+  assert.match(invite,/state\.invite=!state\.invite/);
+  assert.match(html,/invite-page\.css\?v=invite-hub-102/);
+});
+
+test('new invite UI is connected to opaque server tokens and server-side disable',()=>{
+  const integration=fs.readFileSync(new URL('./invite-integration.js',import.meta.url),'utf8');
+  assert.match(integration,/\.r16-link-card, \.invite-card/);
+  assert.match(integration,/functions\.invoke\('create-invite'/);
+  assert.match(integration,/update\(\{invite_enabled:next\}\)/);
+  assert.match(integration,/update\(\{status:'DISABLED'\}\)/);
+  assert.match(integration,/sessionStorage\.removeItem\(`reelation-owner-invite:/);
+});
