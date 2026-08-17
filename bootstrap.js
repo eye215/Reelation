@@ -9,7 +9,7 @@ document.documentElement.dataset.auth='anonymous';
 
 import('./app.js?v=top-cast-100').then(async()=>{
  try{
-  const{getVerifiedUser,supabase}=await import('./supabase-client.js?v=cdn-fallback-96');
+  const{getVerifiedUser,supabase}=await import('./supabase-client.js?v=public-invite-103');
   window.__REELATION_SUPABASE__=supabase;
   const timeout=new Promise(resolve=>setTimeout(()=>resolve(null),3000));
   let user=await Promise.race([getVerifiedUser().catch(()=>null),timeout]);
