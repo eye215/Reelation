@@ -39,7 +39,7 @@ test('public invite resolution avoids unsupported authorization preflight',()=>{
   assert.match(resolver,/authorization,apikey,content-type/);
   const html=readFileSync(new URL('./index.html',import.meta.url),'utf8');
   assert.match(inviteClient,/supabase-client\.js\?v=public-invite-103/);
-  assert.match(html,/invite-integration\.js\?v=visitor-integrity-106/);
+  assert.match(html,/invite-integration\.js\?v=invite-retry-111/);
 });
 
 test('current visitor V2 form is bound to the authenticated server transaction', () => {
@@ -61,6 +61,14 @@ test('invite client maps server rejection codes to safe user-facing states', () 
     assert.match(inviteClient, new RegExp(code));
   }
   assert.match(inviteClient, /error\?\.context\?\.clone\?\.\(\)\.json/);
+});
+
+test('transient invite lookup failures retry without pretending the invite expired',()=>{
+  assert.match(inviteClient,/resolveInviteWithRetry/);
+  assert.match(inviteClient,/attempts=3/);
+  assert.match(inviteClient,/SERVER_UNAVAILABLE:'초대 정보를 잠시 불러오지 못했어요.'/);
+  assert.match(inviteClient,/네트워크 연결을 확인한 뒤 다시 시도해주세요/);
+  assert.match(inviteClient,/다시 시도/);
 });
 
 test('cached invites are revalidated and disabled access is cleared', () => {
