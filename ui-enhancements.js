@@ -16,6 +16,7 @@ const STEMS=['갑','을','병','정','무','기','경','신','임','계'];
 const BRANCHES=['자','축','인','묘','진','사','오','미','신','유','술','해'];
 const topic=name=>{const last=name.charCodeAt(name.length-1);return last>=0xac00&&last<=0xd7a3&&(last-0xac00)%28?`${name}은`:`${name}는`};
 const relationKeyword=person=>{const s=person.analysis.scores;return s.growth>=70?'성장':s.stability>=70?'편안함':s.conflict>=70?'긴장':s.impact>=75?'강한 영향':'호기심'};
+const escapeNarrative=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 
 function enhanceNavigation(){
   const labels=[['/board','영화'],['/cast','출연진'],['/ranking','영향도'],['/settings','MY']];
@@ -113,14 +114,21 @@ function enhanceNarrative(){
   if(!section||section.dataset.expanded)return;
   const state=readState(),member=state?.cast?.find(person=>person.id===location.pathname.split('/')[2]);
   if(!member)return;
-  const s=member.analysis.scores,role=ROLE_KO[member.analysis.lifeRole]||member.analysis.lifeRole,genre=GENRE_KO[member.analysis.relationshipGenre]||member.analysis.relationshipGenre,name=member.nickname;
+  const s=member.analysis.scores,role=ROLE_KO[member.analysis.lifeRole]||member.analysis.lifeRole,genre=GENRE_KO[member.analysis.relationshipGenre]||member.analysis.relationshipGenre,name=member.nickname,narrative=member.analysis.narrative;
+  if(narrative?.status==='DONE'&&narrative.summary){
+    section.dataset.expanded='true';
+    section.dataset.narrativeSource='ai';
+    section.innerHTML=`<div class="narrative-status"><span>AI RELATIONSHIP STORY</span><small>관계 점수와 분류를 바꾸지 않고 해석한 서사예요.</small></div><h3>${escapeNarrative(narrative.headline||`${role}, 우리 사이의 장면`)}</h3><p><strong>${escapeNarrative(narrative.summary)}</strong></p><p>${escapeNarrative(narrative.roleReason)}</p><p>${escapeNarrative(narrative.relationshipPattern)}</p>${narrative.conflictPattern?`<p>${escapeNarrative(narrative.conflictPattern)}</p>`:''}${narrative.longTermPattern?`<p>${escapeNarrative(narrative.longTermPattern)}</p>`:''}<p class="narrative-logline">“${escapeNarrative(narrative.headline||'서로의 다음 선택을 조금씩 바꾸는 관계')}”</p>`;
+    return;
+  }
   const closeness=s.stability>=65?'서로의 반응을 확인하고 천천히 안전한 거리를 좁혀 가는':'쉽게 익숙해지기보다 몇 번의 탐색과 확인을 거쳐 거리를 조율하는';
   const expression=s.attraction>=70?'말보다 시선과 반응이 먼저 움직이고, 작은 변화도 빠르게 알아차리는':'감정을 크게 드러내기보다 대화의 맥락과 행동으로 마음을 확인하는';
   const tension=s.conflict>=70?'서로의 속도와 기대가 어긋날 때 긴장이 선명해진다. 한쪽이 답을 서두르면 다른 쪽은 생각할 공간을 확보하려 하고, 그 차이가 침묵이나 날카로운 말로 번질 수 있다.':'큰 충돌보다는 표현의 온도 차이가 작은 오해를 만든다. 괜찮다고 넘긴 감정이 뒤늦게 드러날 수 있어, 짐작보다 짧고 분명한 확인이 필요한 관계다.';
   const change=s.growth>=70?'이 사람 앞에서는 익숙한 선택을 반복하기보다 새로운 방식으로 반응해 보게 된다. 상대는 정답을 대신 주기보다 스스로 기준을 세우게 만들고, 그 과정에서 관계뿐 아니라 자신의 욕구와 경계를 더 정확히 보게 한다.':'이 관계의 변화는 극적인 전환보다 생활 속 작은 조정으로 나타난다. 상대의 리듬을 이해하는 동안 자신의 표현 방식과 기대치를 돌아보고, 편안함을 유지하면서도 필요한 말을 꺼내는 연습을 하게 된다.';
   const future=s.longevity>=65?'앞으로도 관계를 서둘러 규정하기보다 반복되는 신뢰의 장면을 쌓는다면, 서로에게 익숙하면서도 계속 새로운 면을 발견하는 서사로 이어질 가능성이 있다.':'앞으로의 방향은 만나는 횟수보다 각 장면에서 얼마나 솔직하게 반응하는지에 달려 있다. 거리를 억지로 좁히지 않고 필요한 순간에 다시 연결될 때, 짧은 만남도 오래 남는 의미를 만들 수 있다.';
   section.dataset.expanded='true';
-  section.innerHTML=`<p><strong>${topic(name)} 당신의 이야기에서 ‘${role}’의 자리에 가깝습니다.</strong> 영향력 ${Math.round(s.impact)}점과 성장성 ${Math.round(s.growth)}점이 보여주듯, 단순히 곁에 머무는 인물이라기보다 당신의 생각과 선택에 움직임을 만드는 사람입니다. 함께 있으면 평소 당연하게 여기던 기준을 다시 묻게 되고, 상대의 한마디나 태도가 다음 행동을 결정하는 계기가 되기 쉽습니다.</p><p>이 관계를 영화로 옮기면 장르는 ${genre}에 가깝습니다. ${closeness} 흐름과 ${expression} 방식이 관계의 분위기를 만듭니다. 가까워지는 순간에도 모든 의미가 한 번에 설명되지는 않으며, 대화가 끝난 뒤에야 상대의 의도나 자신의 감정을 다시 생각하게 되는 여운이 남습니다.</p><p>${tension} ${change}</p><p>${future} 이 관계의 핵심은 상대를 완전히 해석하는 데 있지 않고, 서로 다른 리듬을 읽으며 자신도 이전과 다른 선택을 배우는 데 있습니다.</p><p class="narrative-logline">“설명되지 않은 장면 사이에서, 두 사람은 서로의 다음 선택을 조금씩 바꾸어 간다.”</p>`;
+  const status=narrative?.status==='FAILED'?'<div class="narrative-status is-fallback"><span>관계 분석 완료</span><small>AI 서사는 잠시 준비 중이라 기본 해석을 보여드려요.</small></div>':narrative?.status==='PENDING'?'<div class="narrative-status is-pending"><span>관계 서사 제작 중</span><small>분석 결과는 완료됐고, 영화 같은 해석을 이어 쓰고 있어요.</small></div>':'';
+  section.innerHTML=`${status}<p><strong>${topic(name)} 당신의 이야기에서 ‘${role}’의 자리에 가깝습니다.</strong> 영향력 ${Math.round(s.impact)}점과 성장성 ${Math.round(s.growth)}점이 보여주듯, 단순히 곁에 머무는 인물이라기보다 당신의 생각과 선택에 움직임을 만드는 사람입니다. 함께 있으면 평소 당연하게 여기던 기준을 다시 묻게 되고, 상대의 한마디나 태도가 다음 행동을 결정하는 계기가 되기 쉽습니다.</p><p>이 관계를 영화로 옮기면 장르는 ${genre}에 가깝습니다. ${closeness} 흐름과 ${expression} 방식이 관계의 분위기를 만듭니다. 가까워지는 순간에도 모든 의미가 한 번에 설명되지는 않으며, 대화가 끝난 뒤에야 상대의 의도나 자신의 감정을 다시 생각하게 되는 여운이 남습니다.</p><p>${tension} ${change}</p><p>${future} 이 관계의 핵심은 상대를 완전히 해석하는 데 있지 않고, 서로 다른 리듬을 읽으며 자신도 이전과 다른 선택을 배우는 데 있습니다.</p><p class="narrative-logline">“설명되지 않은 장면 사이에서, 두 사람은 서로의 다음 선택을 조금씩 바꾸어 간다.”</p>`;
 }
 
 function enhanceScoreLabels(){
