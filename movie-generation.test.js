@@ -59,3 +59,20 @@ test('invite submission links the authenticated user to the submitted birth prof
   assert.match(linkMigration,/birth_profile_id=excluded\.birth_profile_id/);
   assert.match(linkMigration,/source_type,birth_profile_id,status/);
 });
+
+test('completed invite analysis publishes a non-sensitive character image key',()=>{
+  assert.match(migration,/character_image_key text/);
+  assert.match(migration,/c\.character_image_key/);
+  assert.match(analysis,/characterImageKey/);
+  assert.match(analysis,/pillars\/\$\{castSaju\.dayPillarIndex\}/);
+});
+
+test('owner sync merges completed server participants into the casting board',()=>{
+  const ownerSync=read('owner-sync.js');
+  const app=read('app.js');
+  assert.match(ownerSync,/relationship_analyses/);
+  assert.match(ownerSync,/genre_analyses/);
+  assert.match(ownerSync,/reelation-server-cast-synced/);
+  assert.match(app,/reelation-server-cast-synced/);
+  assert.match(app,/byId\.set\(member\.id,member\)/);
+});
