@@ -1,4 +1,4 @@
-import{supabase,getVerifiedUser,signInWithMagicLink,signInWithKakao,invokePublicFunction}from'./supabase-client.js?v=cdn-fallback-96';
+import{supabase,getVerifiedUser,signInWithMagicLink,signInWithKakao,invokePublicFunction}from'./supabase-client.js?v=public-invite-103';
 
 const app=document.querySelector('#app');
 const tokenFromPath=()=>location.pathname.match(/^\/reel\/([A-Za-z0-9_-]{40,128})\/?$/)?.[1]||null;
