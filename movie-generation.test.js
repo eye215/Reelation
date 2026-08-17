@@ -93,3 +93,13 @@ test('server analysis supports the same lunar birth-date normalization as the cl
   assert.match(serverEngine,/const p=normalizeBirthDate\(input\)/);
   assert.doesNotMatch(serverEngine,/LUNAR_CALENDAR_NOT_SUPPORTED/);
 });
+
+
+test('production Edge Function names are reproducible from source control',()=>{
+  const submitAuth=read('supabase/functions/submit-invite-auth/index.ts');
+  const analysisV2=read('supabase/functions/process-invite-analysis-v2/index.ts');
+  const config=read('supabase/config.toml');
+  assert.match(submitAuth,/submit-invite\/index\.ts/);
+  assert.match(analysisV2,/process-invite-analysis\/index\.ts/);
+  assert.match(config,/\[functions\.resolve-invite\][\s\S]*verify_jwt = false/);
+});
