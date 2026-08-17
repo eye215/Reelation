@@ -76,3 +76,12 @@ test('owner sync merges completed server participants into the casting board',()
   assert.match(app,/reelation-server-cast-synced/);
   assert.match(app,/byId\.set\(member\.id,member\)/);
 });
+
+test('owner sync keeps polling pending analysis and AI narrative until completion',()=>{
+  const ownerSync=read('owner-sync.js');
+  assert.match(ownerSync,/setInterval/);
+  assert.match(ownerSync,/document\.visibilityState === 'visible'/);
+  assert.match(ownerSync,/narratives/);
+  assert.match(ownerSync,/existingSection\?\.remove\(\)/);
+  assert.doesNotMatch(ownerSync,/document\.querySelector\('\.server-cast-updates'\)\s*\n\s*\) return/);
+});
