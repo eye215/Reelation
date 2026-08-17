@@ -84,6 +84,13 @@ test('visitor participation preserves the visitor owner state and never fabricat
   assert.match(inviteClient,/관계 분석과 캐릭터를 만드는 중/);
 });
 
+test('a fresh invite shows a neutral validation state before the server decides validity',()=>{
+  assert.match(app,/친구의 영화를<br>불러오고 있어요/);
+  assert.match(app,/초대 상태와 공개 정보를 안전하게 확인하는 중/);
+  assert.doesNotMatch(app,/visitorPagePublic[\s\S]{0,500}상영이 종료된 링크예요/);
+  assert.match(inviteClient,/server-invite-error/);
+});
+
 // These are intentionally visible as TODO until a real token-backed server flow exists.
 // Converting one to a passing test requires exercising the deployed app and verifying DB rows.
 const normalCases = [
