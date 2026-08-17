@@ -17,6 +17,7 @@ create table if not exists public.movie_generation_jobs (
 
 create index if not exists movie_generation_jobs_status_created_idx
   on public.movie_generation_jobs(status, created_at);
+alter table public.cast_members add column if not exists character_image_key text;
 alter table public.movie_generation_jobs enable row level security;
 revoke all on public.movie_generation_jobs from anon, authenticated;
 grant select on public.movie_generation_jobs to authenticated;
@@ -67,7 +68,7 @@ begin
   delete from public.public_cast_entries e
   using public.public_reels r where r.board_id=p_board_id and e.public_id=r.public_id;
   insert into public.public_cast_entries(public_id,cast_member_public_id,nickname,influence_score,influence_rank,image_key)
-  select pr.public_id,c.id,coalesce(c.public_name,c.nickname),round(r.raw_score)::integer,r.rank,null
+  select pr.public_id,c.id,coalesce(c.public_name,c.nickname),round(r.raw_score)::integer,r.rank,c.character_image_key
   from public.rankings r
   join public.cast_members c on c.id=r.cast_member_id and c.status='ACTIVE'
   join public.public_reels pr on pr.board_id=r.board_id
