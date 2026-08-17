@@ -29,8 +29,18 @@ test('analysis completion recalculates rankings using a server-only transaction'
 test('invite analysis dispatch detects rejected responses and retries the deployed function name',()=>{
   assert.match(submit,/response\.ok/);
   assert.match(submit,/process-invite-analysis-v2/);
-  assert.match(submit,/process-invite-analysis'/);
+  assert.match(submit,/attempt<=3/);
+  assert.doesNotMatch(submit,/\['process-invite-analysis-v2','process-invite-analysis'\]/);
   assert.match(submit,/analysis dispatch exhausted/);
+});
+
+test('production Edge Function names are reproducible from source control',()=>{
+  const submitAuth=read('supabase/functions/submit-invite-auth/index.ts');
+  const analysisV2=read('supabase/functions/process-invite-analysis-v2/index.ts');
+  const config=read('supabase/config.toml');
+  assert.match(submitAuth,/submit-invite\/index\.ts/);
+  assert.match(analysisV2,/process-invite-analysis\/index\.ts/);
+  assert.match(config,/\[functions\.resolve-invite\][\s\S]*verify_jwt = false/);
 });
 
 test('movie jobs are explicit, versioned, cached, and dispatched in the background',()=>{
@@ -94,12 +104,9 @@ test('server analysis supports the same lunar birth-date normalization as the cl
   assert.doesNotMatch(serverEngine,/LUNAR_CALENDAR_NOT_SUPPORTED/);
 });
 
-
-test('production Edge Function names are reproducible from source control',()=>{
-  const submitAuth=read('supabase/functions/submit-invite-auth/index.ts');
-  const analysisV2=read('supabase/functions/process-invite-analysis-v2/index.ts');
-  const config=read('supabase/config.toml');
-  assert.match(submitAuth,/submit-invite\/index\.ts/);
-  assert.match(analysisV2,/process-invite-analysis\/index\.ts/);
-  assert.match(config,/\[functions\.resolve-invite\][\s\S]*verify_jwt = false/);
+test('unsupported lunar calendars cannot prevent the Edge Function from booting',()=>{
+  const serverEngine=read('supabase/functions/process-invite-analysis/engine.ts');
+  assert.doesNotMatch(serverEngine,/^const lunarFormatter=new Intl\.DateTimeFormat/m);
+  assert.match(serverEngine,/getLunarFormatter/);
+  assert.match(serverEngine,/LUNAR_CALENDAR_UNAVAILABLE/);
 });
