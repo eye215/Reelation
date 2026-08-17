@@ -12,10 +12,10 @@ test('personal OTT visual layer is mounted after legacy styles',()=>{
   assert.match(html,/reference-ott\.css\?v=mobile-ott-79/);
   assert.ok(html.indexOf('personal-ott.css')>html.indexOf('ott-ui.css'));
   assert.ok(html.indexOf('reference-ott.css')>html.indexOf('personal-ott.css'));
-  assert.match(html,/reelation-v2\.css\?v=ia-reconnect-99/);
+  assert.match(html,/reelation-v2\.css\?v=top-cast-100/);
   assert.ok(html.indexOf('reelation-v2.css')>html.indexOf('reference-ott.css'));
-  assert.match(html,/bootstrap\.js\?v=ia-reconnect-99/);
-  assert.match(bootstrap,/app\.js\?v=ia-reconnect-99/);
+  assert.match(html,/bootstrap\.js\?v=top-cast-100/);
+  assert.match(bootstrap,/app\.js\?v=top-cast-100/);
 });
 
 test('movie description opens from the poster as an immersive modal',()=>{
@@ -97,4 +97,22 @@ test('owner navigation names match the separated information architecture',()=>{
   assert.match(app,/>영화<\/button>/);
   assert.match(app,/>출연진<\/button>/);
   assert.match(app,/>영향도<\/button>/);
+});
+
+test('ranking is presented as a Top Cast experience instead of a legacy report',()=>{
+  const ranking=app.slice(app.indexOf('function ranking()'),app.indexOf('function genre('));
+  assert.match(ranking,/r14-ranking/);
+  assert.match(ranking,/TOP CAST/);
+  assert.match(ranking,/친구 초대하기/);
+  assert.doesNotMatch(ranking,/The leaderboard/);
+  assert.match(v2,/\.r14-rank-row/);
+});
+
+test('MY is an account and privacy hub instead of the legacy demo card',()=>{
+  assert.match(app,/function settings\(\)\{/);
+  assert.match(app,/내 Reelation/);
+  assert.match(app,/원본 생년월일과 출생시간은 관계 분석에만 사용/);
+  assert.match(app,/이 기기의 임시 데이터 지우기/);
+  assert.doesNotMatch(app,/데모 초기화/);
+  assert.match(html,/my-page\.css\?v=my-hub-101/);
 });
